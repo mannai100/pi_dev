@@ -109,10 +109,10 @@ public class LoginController {
 
             // Choisir le tableau de bord approprié
             if (userType != null && (userType.equals(RoleService.ROLE_ADMIN) || userType.equals(RoleService.ROLE_SUPER_ADMIN))) {
-                fxmlPath = "src/main/resources/fxml/AdminDashboard.fxml";
+                fxmlPath = "src/main/resources/fxml/HomePage.fxml";
                 title = "Tableau de bord administrateur";
             } else {
-                fxmlPath = "src/main/resources/fxml/ClientDashboard.fxml";
+                fxmlPath = "src/main/resources/fxml/HomePage.fxml";
                 title = "Tableau de bord client";
             }
 
