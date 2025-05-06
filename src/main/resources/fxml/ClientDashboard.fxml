@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.ClientDashboardController"
+            prefHeight="600.0" prefWidth="800.0">
+    
+    <top>
+        <VBox>
+            <MenuBar>
+                <Menu text="Fichier">
+                    <MenuItem text="Déconnexion" onAction="#handleLogout"/>
+                    <SeparatorMenuItem />
+                    <MenuItem text="Quitter" onAction="#handleExit"/>
+                </Menu>
+                <Menu text="Événements">
+                    <MenuItem text="Rechercher des événements" onAction="#handleSearchEvents"/>
+                    <MenuItem text="Mes réservations" onAction="#handleMyReservations"/>
+                </Menu>
+                <Menu text="Profil">
+                    <MenuItem text="Voir mon profil" onAction="#handleViewProfile"/>
+                    <MenuItem text="Modifier mon profil" onAction="#handleEditProfile"/>
+                </Menu>
+            </MenuBar>
+            
+            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: #f0f0f0; -fx-padding: 10px;">
+                <Text text="Tableau de bord client" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Text fx:id="userInfoText" text="Connecté en tant que: Client" />
+            </HBox>
+        </VBox>
+    </top>
+    
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <Tab text="Accueil">
+                <VBox spacing="20" alignment="CENTER">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    
+                    <Text text="Bienvenue sur votre espace client" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+                    
+                    <HBox spacing="20" alignment="CENTER">
+                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: #e6f7ff; -fx-padding: 20px; -fx-background-radius: 5px;">
+                            <Text text="Événements disponibles" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            <Text fx:id="availableEventsText" text="0" style="-fx-font-size: 24px;"/>
+                            <Button text="Voir" onAction="#handleSearchEvents"/>
+                        </VBox>
+                        
+                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: #e6ffe6; -fx-padding: 20px; -fx-background-radius: 5px;">
+                            <Text text="Mes réservations" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                            <Text fx:id="myReservationsText" text="0" style="-fx-font-size: 24px;"/>
+                            <Button text="Voir" onAction="#handleMyReservations"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </Tab>
+            
+            <Tab text="Événements">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Text text="Événements disponibles" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="eventSearchField" promptText="Rechercher un événement" prefWidth="200"/>
+                    </HBox>
+                    
+                    <TableView fx:id="eventsTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="eventTitleColumn" text="Titre" prefWidth="200"/>
+                            <TableColumn fx:id="eventDateColumn" text="Date" prefWidth="150"/>
+                            <TableColumn fx:id="eventPlacesColumn" text="Places disponibles" prefWidth="150"/>
+                            <TableColumn fx:id="eventActionsColumn" text="Actions" prefWidth="150"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            
+            <Tab text="Mes réservations">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+                    
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Text text="Mes réservations" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    </HBox>
+                    
+                    <TableView fx:id="reservationsTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="reservationEventColumn" text="Événement" prefWidth="200"/>
+                            <TableColumn fx:id="reservationDateColumn" text="Date" prefWidth="150"/>
+                            <TableColumn fx:id="reservationStatusColumn" text="Statut" prefWidth="100"/>
+                            <TableColumn fx:id="reservationActionsColumn" text="Actions" prefWidth="150"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            
+            <Tab text="Profil">
+                <VBox spacing="20" alignment="CENTER">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    
+                    <Text text="Mon profil" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+                    
+                    <GridPane hgap="10" vgap="10" alignment="CENTER">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="200" />
+                        </columnConstraints>
+                        
+                        <Label text="Nom:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Text fx:id="nameText" text="Nom du client" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        
+                        <Label text="Prénom:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Text fx:id="firstNameText" text="Prénom du client" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        
+                        <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <Text fx:id="emailText" text="email@exemple.com" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        
+                        <Label text="Adresse:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                        <Text fx:id="addressText" text="Adresse du client" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                        
+                        <Label text="Téléphone:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                        <Text fx:id="phoneText" text="Téléphone du client" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                    </GridPane>
+                    
+                    <Button text="Modifier mon profil" onAction="#handleEditProfile" />
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+    
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-background-color: #f0f0f0; -fx-padding: 5px;">
+            <Text text="© 2025 - Tous droits réservés" />
+        </HBox>
+    </bottom>
+    
+</BorderPane>
