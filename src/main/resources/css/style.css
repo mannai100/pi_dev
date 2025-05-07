@@ -84,6 +84,40 @@
 .list-view {
     -fx-background-color: transparent;
     -fx-padding: 5px;
+    -fx-fixed-cell-size: -1; /* Permet aux cellules d'avoir une hauteur variable */
+}
+
+/* Styles pour la barre de défilement */
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb,
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #3498db;
+    -fx-background-radius: 5px;
+}
+
+.scroll-bar:vertical .track,
+.scroll-bar:horizontal .track {
+    -fx-background-color: #ecf0f1;
+    -fx-background-radius: 5px;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 5;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #3498db;
+    -fx-shape: " ";
+    -fx-padding: 0;
 }
 
 .list-cell {
@@ -93,6 +127,19 @@
     -fx-border-radius: 5px;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);
     -fx-margin: 0 0 5px 0;
+    -fx-pref-height: -1; /* Hauteur variable en fonction du contenu */
+}
+
+/* Styles pour les boutons dans les cellules */
+.list-cell .button {
+    -fx-background-radius: 3px;
+    -fx-padding: 5px 10px;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.list-cell .button:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 3, 0, 0, 1);
 }
 
 .list-cell:empty {

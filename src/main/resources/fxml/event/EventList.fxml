@@ -6,6 +6,7 @@
 <?import javafx.scene.text.*?>
 <?import javafx.scene.shape.Circle?>
 
+<?import javafx.scene.image.ImageView?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.Event.EventListController"
@@ -31,23 +32,35 @@
                 <Button text="Rafraîchir" onAction="#handleRefresh" styleClass="button"/>
                 <Button text="Effacer les filtres" onAction="#handleClearFilters" styleClass="button"/>
             </HBox>
+
+
         </VBox>
     </top>
 
     <center>
-        <StackPane>
-            <!-- Liste des événements -->
-            <ListView fx:id="eventListView" VBox.vgrow="ALWAYS" styleClass="list-view"/>
+        <BorderPane>
+            <center>
+                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scroll-pane">
+                    <VBox fx:id="eventsContainer" spacing="10" styleClass="event-list-container">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+
+                    </VBox>
+                </ScrollPane>
+            </center>
 
             <!-- Bouton flottant d'ajout -->
-            <StackPane alignment="BOTTOM_RIGHT" mouseTransparent="false">
-                <Button text="+" onAction="#handleAddEvent" styleClass="floating-add-button">
-                    <StackPane.margin>
-                        <Insets right="30" bottom="30"/>
-                    </StackPane.margin>
-                </Button>
-            </StackPane>
-        </StackPane>
+            <bottom>
+                <StackPane alignment="BOTTOM_RIGHT" mouseTransparent="false">
+                    <Button text="+" onAction="#handleAddEvent" styleClass="floating-add-button">
+                        <StackPane.margin>
+                            <Insets right="30" bottom="30"/>
+                        </StackPane.margin>
+                    </Button>
+                </StackPane>
+            </bottom>
+        </BorderPane>
     </center>
 
     <bottom>

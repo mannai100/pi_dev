@@ -13,6 +13,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import services.AuthService;
 import services.EventService;
+import services.RoleService;
 import utils.EventValidator;
 
 import java.io.File;
@@ -85,10 +86,12 @@ public class EventEditController implements Initializable {
     private Event event;
     private EventService eventService;
     private AuthService authService;
+    private RoleService roleService;
 
     public EventEditController() {
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
+        roleService = RoleService.getInstance();
     }
 
     @Override
@@ -116,6 +119,20 @@ public class EventEditController implements Initializable {
 
         // Désactiver le champ de texte pour l'image (lecture seule)
         imageField.setEditable(false);
+
+        // Vérifier si l'utilisateur est admin pour activer/désactiver le combobox de statut
+        try {
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin = roleService.isAdmin(currentUser);
+            statusComboBox.setDisable(!isAdmin); // Désactiver pour les non-admins
+
+            if (!isAdmin) {
+                // Ajouter une info-bulle pour expliquer pourquoi le champ est désactivé
+                statusComboBox.setTooltip(new Tooltip("Seuls les administrateurs peuvent modifier le statut d'un événement"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void setEvent(Event event) {
@@ -155,6 +172,40 @@ public class EventEditController implements Initializable {
             } catch (Exception e) {
                 System.err.println("Erreur lors du chargement de l'image: " + e.getMessage());
             }
+        }
+
+        // Vérifier si l'utilisateur est admin ou organisateur
+        try {
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin = roleService.isAdmin(currentUser);
+            boolean isOrganiser = event.getUser() != null &&
+                    currentUser != null &&
+                    event.getUser().getId() == currentUser.getId();
+
+            // Si l'utilisateur n'est ni admin ni organisateur, désactiver tous les champs
+            if (!isAdmin && !isOrganiser) {
+                titleField.setDisable(true);
+                descriptionArea.setDisable(true);
+                dateDebutPicker.setDisable(true);
+                heureDebutSpinner.setDisable(true);
+                minuteDebutSpinner.setDisable(true);
+                dateFinPicker.setDisable(true);
+                heureFinSpinner.setDisable(true);
+                minuteFinSpinner.setDisable(true);
+                maxParticipantsSpinner.setDisable(true);
+                statusComboBox.setDisable(true);
+                browseButton.setDisable(true);
+                saveButton.setDisable(true);
+
+                // Ajouter une info-bulle pour expliquer pourquoi les champs sont désactivés
+                saveButton.setTooltip(new Tooltip("Vous n'avez pas les droits pour modifier cet événement"));
+            } else if (!isAdmin) {
+                // Si l'utilisateur est organisateur mais pas admin, désactiver uniquement le statut
+                statusComboBox.setDisable(true);
+                statusComboBox.setTooltip(new Tooltip("Seuls les administrateurs peuvent modifier le statut d'un événement"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

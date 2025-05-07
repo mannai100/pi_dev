@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,8 +18,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.Node;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.geometry.Insets;
 import javafx.stage.Stage;
 import services.AuthService;
 import services.EventService;
@@ -38,7 +42,7 @@ import java.util.ResourceBundle;
 public class EventListController implements Initializable {
 
     @FXML
-    private ListView<Event> eventListView;
+    private VBox eventsContainer;
 
     @FXML
     private TextField searchField;
@@ -63,19 +67,6 @@ public class EventListController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Configurer la ListView
-        eventListView.setCellFactory(param -> new EventListCell());
-
-        // Configurer le double-clic sur un élément de la liste
-        eventListView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                Event selectedEvent = eventListView.getSelectionModel().getSelectedItem();
-                if (selectedEvent != null) {
-                    viewEvent(selectedEvent);
-                }
-            }
-        });
-
         // Initialiser le filtre de statut
         statusFilter.getItems().addAll("Tous", "actif", "annulé", "complet");
         statusFilter.setValue("Tous");
@@ -88,8 +79,198 @@ public class EventListController implements Initializable {
         loadEvents();
     }
 
+    /**
+     * Gérer le clic sur le bouton "Réserver"
+     */
+    @FXML
+    public void handleReserveEvent(ActionEvent event) {
+        // Récupérer l'événement associé au bouton
+        Button button = (Button) event.getSource();
+        Event selectedEvent = (Event) button.getUserData();
+
+        if (selectedEvent != null) {
+            reserveEvent(selectedEvent);
+        } else {
+            // Pour les boutons de test, utiliser le premier événement de la liste
+            try {
+                List<Event> events = eventService.getAllEvents();
+                if (!events.isEmpty()) {
+                    reserveEvent(events.get(0));
+                } else {
+                    showAlert(Alert.AlertType.INFORMATION, "Information", "Aucun événement", "Aucun événement disponible pour la réservation.");
+                }
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de réservation", "Une erreur est survenue: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Gérer le clic sur le bouton "Modifier"
+     */
+    @FXML
+    public void handleEditEvent(ActionEvent event) {
+        // Récupérer l'événement associé au bouton
+        Button button = (Button) event.getSource();
+        Event selectedEvent = (Event) button.getUserData();
+
+        if (selectedEvent != null) {
+            editEvent(selectedEvent);
+        } else {
+            // Pour les boutons de test, utiliser le premier événement de la liste
+            try {
+                List<Event> events = eventService.getAllEvents();
+                if (!events.isEmpty()) {
+                    editEvent(events.get(0));
+                } else {
+                    showAlert(Alert.AlertType.INFORMATION, "Information", "Aucun événement", "Aucun événement disponible pour la modification.");
+                }
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de modification", "Une erreur est survenue: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Gérer le clic sur le bouton "Supprimer"
+     */
+    @FXML
+    public void handleDeleteEvent(ActionEvent event) {
+        // Récupérer l'événement associé au bouton
+        Button button = (Button) event.getSource();
+        Event selectedEvent = (Event) button.getUserData();
+
+        if (selectedEvent != null) {
+            deleteEvent(selectedEvent);
+        } else {
+            // Pour les boutons de test, utiliser le premier événement de la liste
+            try {
+                List<Event> events = eventService.getAllEvents();
+                if (!events.isEmpty()) {
+                    deleteEvent(events.get(0));
+                } else {
+                    showAlert(Alert.AlertType.INFORMATION, "Information", "Aucun événement", "Aucun événement disponible pour la suppression.");
+                }
+            } catch (SQLException e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de suppression", "Une erreur est survenue: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
     // Classe interne pour personnaliser l'affichage des événements dans la ListView
     private class EventListCell extends ListCell<Event> {
+        private final HBox mainContainer;
+        private final VBox infoContainer;
+        private final ImageView imageView;
+        private final Label titleLabel;
+        private final Label descriptionLabel;
+        private final Label dateLabel;
+        private final Label statusLabel;
+        private final Label userLabel;
+        private final Button reserveBtn;
+        private final Button editBtn;
+        private final Button deleteBtn;
+        private final HBox buttonBox;
+
+        public EventListCell() {
+            // Créer les composants une seule fois pour éviter les problèmes de performance
+            mainContainer = new HBox(10);
+            mainContainer.getStyleClass().add("event-card");
+            mainContainer.setPadding(new Insets(10));
+            mainContainer.setMaxWidth(Double.MAX_VALUE);
+
+            infoContainer = new VBox(5);
+            HBox.setHgrow(infoContainer, Priority.ALWAYS);
+
+            titleLabel = new Label();
+            titleLabel.getStyleClass().add("event-title");
+
+            descriptionLabel = new Label();
+            descriptionLabel.getStyleClass().add("event-description");
+            descriptionLabel.setWrapText(true);
+
+            dateLabel = new Label();
+            dateLabel.getStyleClass().add("event-date");
+
+            HBox infoBox = new HBox(10);
+            statusLabel = new Label();
+            userLabel = new Label();
+            userLabel.getStyleClass().add("event-info");
+            infoBox.getChildren().addAll(statusLabel, userLabel);
+
+            infoContainer.getChildren().addAll(titleLabel, descriptionLabel, dateLabel, infoBox);
+
+            VBox imageContainer = new VBox(5);
+            imageContainer.setPrefWidth(150);
+
+            imageView = new ImageView();
+            imageView.setFitWidth(150);
+            imageView.setFitHeight(100);
+            imageView.setPreserveRatio(true);
+
+            buttonBox = new HBox(5);
+            buttonBox.setPadding(new Insets(5, 0, 0, 0));
+
+            reserveBtn = new Button("Réserver");
+            reserveBtn.setPrefWidth(80);
+            reserveBtn.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;");
+            reserveBtn.setOnAction(e -> {
+                Event event = getItem();
+                if (event != null) {
+                    try {
+                        reserveEvent(event);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de réservation", "Une erreur est survenue: " + ex.getMessage());
+                    }
+                }
+                e.consume(); // Empêcher la propagation de l'événement
+            });
+
+            editBtn = new Button("Modifier");
+            editBtn.setPrefWidth(80);
+            editBtn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;");
+            editBtn.setOnAction(e -> {
+                Event event = getItem();
+                if (event != null) {
+                    try {
+                        editEvent(event);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de modification", "Une erreur est survenue: " + ex.getMessage());
+                    }
+                }
+                e.consume(); // Empêcher la propagation de l'événement
+            });
+
+            deleteBtn = new Button("Supprimer");
+            deleteBtn.setPrefWidth(80);
+            deleteBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+            deleteBtn.setOnAction(e -> {
+                Event event = getItem();
+                if (event != null) {
+                    try {
+                        deleteEvent(event);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de suppression", "Une erreur est survenue: " + ex.getMessage());
+                    }
+                }
+                e.consume(); // Empêcher la propagation de l'événement
+            });
+
+            imageContainer.getChildren().addAll(imageView, buttonBox);
+            mainContainer.getChildren().addAll(infoContainer, imageContainer);
+
+            // Désactiver les événements de clic sur les boutons pour éviter la propagation
+            reserveBtn.setOnMouseClicked(e -> e.consume());
+            editBtn.setOnMouseClicked(e -> e.consume());
+            deleteBtn.setOnMouseClicked(e -> e.consume());
+        }
+
         @Override
         protected void updateItem(Event event, boolean empty) {
             super.updateItem(event, empty);
@@ -101,6 +282,7 @@ public class EventListController implements Initializable {
                 // Créer un conteneur principal pour l'affichage de l'événement
                 HBox mainContainer = new HBox(10);
                 mainContainer.getStyleClass().add("event-card");
+                mainContainer.setMaxWidth(Double.MAX_VALUE); // Permet à la cellule de s'étendre horizontalement
 
                 // Conteneur pour les informations textuelles
                 VBox infoContainer = new VBox(5);
@@ -181,28 +363,70 @@ public class EventListController implements Initializable {
 
                     // Ajouter des boutons d'action
                     HBox actionBox = new HBox(5);
+                    actionBox.setStyle("-fx-padding: 5px 0;");
 
-                    // Bouton Réserver (pour tous les utilisateurs)
-                    Button reserveBtn = new Button("Réserver");
-                    reserveBtn.getStyleClass().add("button-success");
-                    reserveBtn.setOnAction(e -> reserveEvent(event));
-                    actionBox.getChildren().add(reserveBtn);
+                    // Bouton Réserver (pour tous les utilisateurs sauf l'organisateur)
+                    if (!(isOrganiser)) {
+                        final Event currentEvent = event; // Capture l'événement actuel
+                        Button reserveBtn = new Button("Réserver");
+                        reserveBtn.setPrefWidth(80);
+                        reserveBtn.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;");
+                        reserveBtn.setOnAction(e -> {
+                            try {
+                                reserveEvent(currentEvent);
+                                e.consume(); // Empêcher la propagation de l'événement
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur d'exécution", "Une erreur est survenue lors de la réservation: " + ex.getMessage());
+                            }
+                        });
+                        reserveBtn.setOnMouseClicked(e -> e.consume()); // Empêcher la propagation du clic
+                        actionBox.getChildren().add(reserveBtn);
+                    }
 
                     // Boutons Modifier et Supprimer (pour admin et organisateur)
                     if (isAdmin || isOrganiser) {
+                        final Event currentEvent = event; // Capture l'événement actuel
                         Button editBtn = new Button("Modifier");
-                        editBtn.getStyleClass().add("button-warning");
-                        editBtn.setOnAction(e -> editEvent(event));
+                        editBtn.setPrefWidth(80);
+                        editBtn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;");
+                        editBtn.setOnAction(e -> {
+                            try {
+                                editEvent(currentEvent);
+                                e.consume(); // Empêcher la propagation de l'événement
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur d'exécution", "Une erreur est survenue lors de la modification: " + ex.getMessage());
+                            }
+                        });
+                        editBtn.setOnMouseClicked(e -> e.consume()); // Empêcher la propagation du clic
 
                         Button deleteBtn = new Button("Supprimer");
-                        deleteBtn.getStyleClass().add("button-danger");
-                        deleteBtn.setOnAction(e -> deleteEvent(event));
+                        deleteBtn.setPrefWidth(80);
+                        deleteBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+                        deleteBtn.setOnAction(e -> {
+                            try {
+                                deleteEvent(currentEvent);
+                                e.consume(); // Empêcher la propagation de l'événement
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur d'exécution", "Une erreur est survenue lors de la suppression: " + ex.getMessage());
+                            }
+                        });
+                        deleteBtn.setOnMouseClicked(e -> e.consume()); // Empêcher la propagation du clic
 
                         actionBox.getChildren().addAll(editBtn, deleteBtn);
                     }
 
-                    // Ajouter les boutons au conteneur d'image
+                        // Ajouter les boutons au conteneur d'image
                     imageContainer.getChildren().add(actionBox);
+
+                    // Empêcher la propagation des événements de clic aux cellules parentes
+                    for (Node node : actionBox.getChildren()) {
+                        if (node instanceof Button) {
+                            node.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> e.consume());
+                        }
+                    }
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -212,12 +436,21 @@ public class EventListController implements Initializable {
         }
     }
 
-    private void loadEvents() {
+    public void loadEvents() {
         try {
             List<Event> events = eventService.getAllEvents();
             eventList.clear();
             eventList.addAll(events);
-            eventListView.setItems(eventList);
+
+            // Vider le conteneur d'événements
+            eventsContainer.getChildren().clear();
+
+            // Ajouter chaque événement au conteneur
+            for (Event event : events) {
+                // Créer un conteneur pour l'événement
+                HBox eventCard = createEventCard(event);
+                eventsContainer.getChildren().add(eventCard);
+            }
 
             // Mettre à jour le compteur d'événements
             totalEventsText.setText("Total: " + events.size() + " événement(s)");
@@ -233,8 +466,11 @@ public class EventListController implements Initializable {
 
         try {
             List<Event> allEvents = eventService.getAllEvents();
-            eventList.clear();
 
+            // Vider le conteneur d'événements
+            eventsContainer.getChildren().clear();
+
+            int count = 0;
             for (Event event : allEvents) {
                 boolean matchesSearch = searchText.isEmpty() ||
                         event.getTitle().toLowerCase().contains(searchText) ||
@@ -244,16 +480,147 @@ public class EventListController implements Initializable {
                         (event.getStatus() != null && event.getStatus().equals(statusText));
 
                 if (matchesSearch && matchesStatus) {
-                    eventList.add(event);
+                    // Créer un conteneur pour l'événement
+                    HBox eventCard = createEventCard(event);
+                    eventsContainer.getChildren().add(eventCard);
+                    count++;
                 }
             }
 
             // Mettre à jour le compteur d'événements
-            totalEventsText.setText("Total: " + eventList.size() + " événement(s)");
+            totalEventsText.setText("Total: " + count + " événement(s)");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du filtrage des événements", e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Créer un conteneur pour un événement
+     * @param event L'événement à afficher
+     * @return Un conteneur HBox contenant les informations de l'événement
+     */
+    private HBox createEventCard(Event event) {
+        // Créer un conteneur principal pour l'affichage de l'événement
+        HBox mainContainer = new HBox(10);
+        mainContainer.getStyleClass().add("event-card");
+        mainContainer.setPadding(new Insets(10));
+        mainContainer.setMaxWidth(Double.MAX_VALUE);
+
+        // Conteneur pour les informations textuelles
+        VBox infoContainer = new VBox(5);
+        HBox.setHgrow(infoContainer, Priority.ALWAYS);
+
+        // Titre de l'événement
+        Label titleLabel = new Label(event.getTitle());
+        titleLabel.getStyleClass().add("event-title");
+
+        // Description de l'événement (tronquée si trop longue)
+        String description = event.getDescription();
+        if (description != null && description.length() > 50) {
+            description = description.substring(0, 47) + "...";
+        }
+        Label descriptionLabel = new Label(description);
+        descriptionLabel.getStyleClass().add("event-description");
+        descriptionLabel.setWrapText(true);
+
+        // Dates de l'événement
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        Label dateLabel = new Label("Du " + dateFormat.format(event.getDate_debut()) +
+                                   " au " + dateFormat.format(event.getDate_fin()));
+        dateLabel.getStyleClass().add("event-date");
+
+        // Statut et organisateur
+        HBox infoBox = new HBox(10);
+        Label statusLabel = new Label("Statut: " + event.getStatus());
+        statusLabel.getStyleClass().add(getStatusStyleClass(event.getStatus()));
+
+        Label userLabel = new Label("Organisateur: " +
+                                  (event.getUser() != null ?
+                                   event.getUser().getPrenom() + " " + event.getUser().getNom() : ""));
+        userLabel.getStyleClass().add("event-info");
+
+        infoBox.getChildren().addAll(statusLabel, userLabel);
+
+        // Ajouter les éléments au conteneur d'informations
+        infoContainer.getChildren().addAll(titleLabel, descriptionLabel, dateLabel, infoBox);
+
+        // Conteneur pour l'image et les boutons
+        VBox imageContainer = new VBox(5);
+        imageContainer.setPrefWidth(150);
+
+        // Image de l'événement
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(150);
+        imageView.setFitHeight(100);
+        imageView.setPreserveRatio(true);
+
+        // Charger l'image
+        if (event.getImage() != null && !event.getImage().isEmpty()) {
+            try {
+                String imagePath = event.getImage();
+                // Vérifier si c'est une URL externe ou un chemin local
+                if (imagePath.startsWith("/images/")) {
+                    // C'est un chemin local, construire l'URL complète
+                    imagePath = "file:src/main/resources" + imagePath;
+                }
+
+                Image image = new Image(imagePath, 150, 100, true, true);
+                imageView.setImage(image);
+            } catch (Exception e) {
+                System.err.println("Erreur lors du chargement de l'image: " + e.getMessage());
+            }
+        }
+
+        imageContainer.getChildren().add(imageView);
+
+        // Ajouter des boutons d'action
+        HBox buttonBox = new HBox(5);
+        buttonBox.setPadding(new Insets(5, 0, 0, 0));
+
+        try {
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin = roleService.isAdmin(currentUser);
+            boolean isOrganiser = event.getUser() != null &&
+                    currentUser != null &&
+                    event.getUser().getId() == currentUser.getId();
+
+            // Bouton Réserver (pour tous les utilisateurs sauf l'organisateur)
+            if (!(isOrganiser)) {
+                Button reserveBtn = new Button("Réserver");
+                reserveBtn.setPrefWidth(80);
+                reserveBtn.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;");
+                reserveBtn.setOnAction(e -> handleReserveEvent(e));
+                reserveBtn.setUserData(event); // Stocker l'événement dans le bouton
+                buttonBox.getChildren().add(reserveBtn);
+            }
+
+            // Boutons Modifier et Supprimer (pour admin et organisateur)
+            if (isAdmin || isOrganiser) {
+                Button editBtn = new Button("Modifier");
+                editBtn.setPrefWidth(80);
+                editBtn.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;");
+                editBtn.setOnAction(e -> handleEditEvent(e));
+                editBtn.setUserData(event); // Stocker l'événement dans le bouton
+
+                Button deleteBtn = new Button("Supprimer");
+                deleteBtn.setPrefWidth(80);
+                deleteBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+                deleteBtn.setOnAction(e -> handleDeleteEvent(e));
+                deleteBtn.setUserData(event); // Stocker l'événement dans le bouton
+
+                buttonBox.getChildren().addAll(editBtn, deleteBtn);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        imageContainer.getChildren().add(buttonBox);
+
+        // Ajouter le conteneur d'informations et l'image au conteneur principal
+        mainContainer.getChildren().addAll(infoContainer, imageContainer);
+
+        return mainContainer;
     }
 
     @FXML
@@ -361,7 +728,7 @@ public class EventListController implements Initializable {
      * Réserver un événement
      * @param event L'événement à réserver
      */
-    private void reserveEvent(Event event) {
+    public void reserveEvent(Event event) {
         try {
             // Vérifier si l'utilisateur est connecté
             User currentUser = authService.getCurrentUser();
@@ -427,7 +794,7 @@ public class EventListController implements Initializable {
         loadEvents();
     }
 
-    private void showAlert(Alert.AlertType alertType, String title, String header, String content) {
+    public void showAlert(Alert.AlertType alertType, String title, String header, String content) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
         alert.setHeaderText(header);
