@@ -178,15 +178,13 @@ public class EventViewController implements Initializable {
                 return;
             }
 
-            // Créer une nouvelle réservation
-            ReserverEvent reservation = new ReserverEvent();
-            reservation.setUser(currentUser);
-            reservation.setEvent(this.event);
-            reservation.setDateReservation(new Date());
-            reservation.setStatut("en attente");
-
             // Enregistrer la réservation
-            reservationService.addReservation(reservation);
+            boolean success = reservationService.addReservation(currentUser.getId(), this.event.getId());
+
+            if (!success) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Une erreur est survenue lors de la réservation");
+                return;
+            }
 
             showAlert(Alert.AlertType.INFORMATION, "Succès", "Votre réservation a été enregistrée avec succès");
 

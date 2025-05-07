@@ -286,4 +286,27 @@ public class ReservationService {
 
         return reservation;
     }
+
+    /**
+     * Ajouter une réservation
+     * @param userId L'ID de l'utilisateur
+     * @param eventId L'ID de l'événement
+     * @return true si la réservation a été ajoutée avec succès, false sinon
+     * @throws SQLException En cas d'erreur SQL
+     */
+    public boolean addReservation(int userId, int eventId) throws SQLException {
+        // Vérifier si l'utilisateur a déjà réservé cet événement
+        if (hasUserReservedEvent(userId, eventId)) {
+            return false;
+        }
+
+        String query = "INSERT INTO reserver_event (user_id, event_id, date_reservation, statut) VALUES (?, ?, NOW(), 'en attente')";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            statement.setInt(2, eventId);
+
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
 }

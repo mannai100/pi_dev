@@ -12,13 +12,17 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import services.AuthService;
 import services.EventService;
+import services.ReservationService;
 import services.RoleService;
 
 import java.io.File;
@@ -94,12 +98,17 @@ public class EventListController implements Initializable {
                 setText(null);
                 setGraphic(null);
             } else {
-                // Créer un conteneur pour l'affichage de l'événement
-                VBox vbox = new VBox(5);
+                // Créer un conteneur principal pour l'affichage de l'événement
+                HBox mainContainer = new HBox(10);
+                mainContainer.getStyleClass().add("event-card");
+
+                // Conteneur pour les informations textuelles
+                VBox infoContainer = new VBox(5);
+                HBox.setHgrow(infoContainer, Priority.ALWAYS);
 
                 // Titre de l'événement
                 Label titleLabel = new Label(event.getTitle());
-                titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                titleLabel.getStyleClass().add("event-title");
 
                 // Description de l'événement (tronquée si trop longue)
                 String description = event.getDescription();
@@ -107,22 +116,60 @@ public class EventListController implements Initializable {
                     description = description.substring(0, 47) + "...";
                 }
                 Label descriptionLabel = new Label(description);
+                descriptionLabel.getStyleClass().add("event-description");
 
                 // Dates de l'événement
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                 Label dateLabel = new Label("Du " + dateFormat.format(event.getDate_debut()) +
                                            " au " + dateFormat.format(event.getDate_fin()));
+                dateLabel.getStyleClass().add("event-date");
 
                 // Statut et organisateur
                 HBox infoBox = new HBox(10);
                 Label statusLabel = new Label("Statut: " + event.getStatus());
+                statusLabel.getStyleClass().add(getStatusStyleClass(event.getStatus()));
+
                 Label userLabel = new Label("Organisateur: " +
                                           (event.getUser() != null ?
                                            event.getUser().getPrenom() + " " + event.getUser().getNom() : ""));
+                userLabel.getStyleClass().add("event-info");
+
                 infoBox.getChildren().addAll(statusLabel, userLabel);
 
-                // Ajouter les éléments au conteneur
-                vbox.getChildren().addAll(titleLabel, descriptionLabel, dateLabel, infoBox);
+                // Ajouter les éléments au conteneur d'informations
+                infoContainer.getChildren().addAll(titleLabel, descriptionLabel, dateLabel, infoBox);
+
+                // Conteneur pour l'image et les boutons
+                VBox imageContainer = new VBox(5);
+                imageContainer.setPrefWidth(150);
+
+                // Image de l'événement
+                ImageView imageView = new ImageView();
+                imageView.setFitWidth(150);
+                imageView.setFitHeight(100);
+                imageView.setPreserveRatio(true);
+
+                // Charger l'image
+                if (event.getImage() != null && !event.getImage().isEmpty()) {
+                    try {
+                        String imagePath = event.getImage();
+                        // Vérifier si c'est une URL externe ou un chemin local
+                        if (imagePath.startsWith("/images/")) {
+                            // C'est un chemin local, construire l'URL complète
+                            imagePath = "file:src/main/resources" + imagePath;
+                        }
+
+                        Image image = new Image(imagePath, 150, 100, true, true);
+                        imageView.setImage(image);
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors du chargement de l'image: " + e.getMessage());
+                    }
+                }
+
+                imageContainer.getChildren().add(imageView);
+
+                // Ajouter le conteneur d'informations et l'image au conteneur principal
+                mainContainer.getChildren().addAll(infoContainer, imageContainer);
 
                 // Ajouter des boutons d'action si l'utilisateur est admin ou organisateur
                 try {
@@ -132,23 +179,35 @@ public class EventListController implements Initializable {
                             currentUser != null &&
                             event.getUser().getId() == currentUser.getId();
 
-                    if (isAdmin || isOrganiser) {
-                        HBox actionBox = new HBox(5);
+                    // Ajouter des boutons d'action
+                    HBox actionBox = new HBox(5);
 
+                    // Bouton Réserver (pour tous les utilisateurs)
+                    Button reserveBtn = new Button("Réserver");
+                    reserveBtn.getStyleClass().add("button-success");
+                    reserveBtn.setOnAction(e -> reserveEvent(event));
+                    actionBox.getChildren().add(reserveBtn);
+
+                    // Boutons Modifier et Supprimer (pour admin et organisateur)
+                    if (isAdmin || isOrganiser) {
                         Button editBtn = new Button("Modifier");
+                        editBtn.getStyleClass().add("button-warning");
                         editBtn.setOnAction(e -> editEvent(event));
 
                         Button deleteBtn = new Button("Supprimer");
+                        deleteBtn.getStyleClass().add("button-danger");
                         deleteBtn.setOnAction(e -> deleteEvent(event));
 
                         actionBox.getChildren().addAll(editBtn, deleteBtn);
-                        vbox.getChildren().add(actionBox);
                     }
+
+                    // Ajouter les boutons au conteneur d'image
+                    imageContainer.getChildren().add(actionBox);
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
 
-                setGraphic(vbox);
+                setGraphic(mainContainer);
             }
         }
     }
@@ -272,6 +331,67 @@ public class EventListController implements Initializable {
             }
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'ouverture du formulaire de modification", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Obtenir la classe de style CSS en fonction du statut de l'événement
+     * @param status Le statut de l'événement
+     * @return La classe de style CSS correspondante
+     */
+    private String getStatusStyleClass(String status) {
+        if (status == null) {
+            return "status-pending";
+        }
+
+        switch (status) {
+            case "actif":
+                return "status-active";
+            case "annulé":
+                return "status-cancelled";
+            case "complet":
+                return "status-completed";
+            default:
+                return "status-pending";
+        }
+    }
+
+    /**
+     * Réserver un événement
+     * @param event L'événement à réserver
+     */
+    private void reserveEvent(Event event) {
+        try {
+            // Vérifier si l'utilisateur est connecté
+            User currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Connexion requise", "Vous devez être connecté pour réserver un événement");
+                return;
+            }
+
+            // Vérifier si l'événement est disponible
+            if (!"actif".equals(event.getStatus())) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Événement non disponible", "Cet événement n'est pas disponible pour réservation");
+                return;
+            }
+
+            // Vérifier si l'utilisateur a déjà réservé cet événement
+            ReservationService reservationService = ReservationService.getInstance();
+            if (reservationService.hasUserReservedEvent(currentUser.getId(), event.getId())) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Réservation existante", "Vous avez déjà réservé cet événement");
+                return;
+            }
+
+            // Créer la réservation
+            boolean success = reservationService.addReservation(currentUser.getId(), event.getId());
+            if (success) {
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Réservation confirmée", "Votre réservation a été enregistrée avec succès");
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de réservation", "Une erreur est survenue lors de la réservation");
+            }
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur technique", "Erreur lors de la réservation: " + e.getMessage());
             e.printStackTrace();
         }
     }
