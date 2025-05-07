@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.Event.ReservationViewController"
+            prefHeight="500.0" prefWidth="500.0">
+    
+    <top>
+        <VBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets top="20" right="20" bottom="10" left="20"/>
+            </padding>
+            
+            <Text text="Détails de la réservation" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        </VBox>
+    </top>
+    
+    <center>
+        <ScrollPane fitToWidth="true">
+            <VBox spacing="15">
+                <padding>
+                    <Insets top="10" right="20" bottom="20" left="20"/>
+                </padding>
+                
+                <TitledPane text="Informations sur l'événement" expanded="true">
+                    <GridPane hgap="10" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="NEVER" minWidth="120" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="Titre:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Label fx:id="eventTitleLabel" text="Titre de l'événement" wrapText="true" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        
+                        <Label text="Description:" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.valignment="TOP" />
+                        <Label fx:id="eventDescriptionLabel" text="Description de l'événement" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        
+                        <Label text="Date de début:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <Label fx:id="eventDateDebutLabel" text="01/01/2025 08:00" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        
+                        <Label text="Date de fin:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                        <Label fx:id="eventDateFinLabel" text="01/01/2025 18:00" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                    </GridPane>
+                </TitledPane>
+                
+                <TitledPane text="Informations sur l'utilisateur" expanded="true">
+                    <GridPane hgap="10" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="NEVER" minWidth="120" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="Nom:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Label fx:id="userNameLabel" text="Nom de l'utilisateur" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        
+                        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label fx:id="userEmailLabel" text="email@exemple.com" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                    </GridPane>
+                </TitledPane>
+                
+                <TitledPane text="Informations sur la réservation" expanded="true">
+                    <GridPane hgap="10" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="NEVER" minWidth="120" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        
+                        <Label text="Date:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Label fx:id="dateReservationLabel" text="01/01/2025 10:00" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        
+                        <Label text="Statut:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label fx:id="statutLabel" text="en attente" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                    </GridPane>
+                </TitledPane>
+            </VBox>
+        </ScrollPane>
+    </center>
+    
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <padding>
+                <Insets top="10" right="20" bottom="20" left="20"/>
+            </padding>
+            
+            <Button fx:id="confirmButton" text="Confirmer" onAction="#handleConfirm" />
+            <Button fx:id="cancelButton" text="Annuler" onAction="#handleCancel" />
+            <Button fx:id="closeButton" text="Fermer" onAction="#handleClose" defaultButton="true" />
+        </HBox>
+    </bottom>
+    
+</BorderPane>

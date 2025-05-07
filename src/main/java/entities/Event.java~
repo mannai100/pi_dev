@@ -25,6 +25,7 @@ public class Event {
     /**
      * Constructeur avec tous les paramètres
      * @param id Identifiant de l'événement
+     * @param organiser Organisateur de l'événement
      * @param title Titre de l'événement
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
@@ -33,9 +34,9 @@ public class Event {
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(int id, User user, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
+    public Event(int id, User organiser, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
         this.id = id;
-        this.user = user;
+        this.user = organiser;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
@@ -47,6 +48,7 @@ public class Event {
 
     /**
      * Constructeur sans id (pour les nouveaux événements)
+     * @param organiser Organisateur de l'événement
      * @param title Titre de l'événement
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
@@ -55,8 +57,8 @@ public class Event {
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(User user, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
-        this.user = user;
+    public Event(User organiser, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
+        this.user = organiser;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
@@ -79,7 +81,7 @@ public class Event {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(User organiser) {
         this.user = user;
     }
 

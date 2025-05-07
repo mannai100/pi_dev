@@ -2,7 +2,10 @@ package services;
 
 import entities.Event;
 import entities.User;
+import utils.EventValidator;
 import utils.MyDatabase;
+
+import java.util.Map;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -37,11 +40,18 @@ public class EventService {
      * Ajouter un nouvel événement
      * @param event L'événement à ajouter
      * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement est invalide
      */
-    public void addEvent(Event event) throws SQLException {
-        String query = "INSERT INTO event (organiser_id, title, description, date_debut, date_fin, max_participants, status, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public void addEvent(Event event) throws SQLException, IllegalArgumentException {
+        // Valider l'événement
+        Map<String, String> errors = EventValidator.validate(event);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(EventValidator.formatErrors(errors));
+        }
+
+        String query = "INSERT INTO event (user_id, title, description, date_debut, date_fin, max_participants, status, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, event.getOrganiser().getId());
+            statement.setInt(1, event.getUser().getId());
             statement.setString(2, event.getTitle());
             statement.setString(3, event.getDescription());
             statement.setTimestamp(4, new Timestamp(event.getDate_debut().getTime()));
@@ -49,9 +59,9 @@ public class EventService {
             statement.setInt(6, event.getMax_participants());
             statement.setString(7, event.getStatus());
             statement.setString(8, event.getImage());
-            
+
             statement.executeUpdate();
-            
+
             // Récupérer l'ID généré
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
@@ -65,8 +75,20 @@ public class EventService {
      * Mettre à jour un événement existant
      * @param event L'événement à mettre à jour
      * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement est invalide
      */
-    public void updateEvent(Event event) throws SQLException {
+    public void updateEvent(Event event) throws SQLException, IllegalArgumentException {
+        // Valider l'événement
+        Map<String, String> errors = EventValidator.validate(event);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(EventValidator.formatErrors(errors));
+        }
+
+        // Vérifier que l'événement existe
+        if (event.getId() <= 0 || getEventById(event.getId()) == null) {
+            throw new IllegalArgumentException("L'événement n'existe pas");
+        }
+
         String query = "UPDATE event SET title = ?, description = ?, date_debut = ?, date_fin = ?, max_participants = ?, status = ?, image = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, event.getTitle());
@@ -77,7 +99,7 @@ public class EventService {
             statement.setString(6, event.getStatus());
             statement.setString(7, event.getImage());
             statement.setInt(8, event.getId());
-            
+
             statement.executeUpdate();
         }
     }
@@ -102,17 +124,17 @@ public class EventService {
      * @throws SQLException En cas d'erreur SQL
      */
     public Event getEventById(int eventId) throws SQLException {
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id WHERE e.id = ?";
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id WHERE e.id = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, eventId);
-            
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return createEventFromResultSet(resultSet);
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -123,16 +145,16 @@ public class EventService {
      */
     public List<Event> getAllEvents() throws SQLException {
         List<Event> events = new ArrayList<>();
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id";
-        
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id";
+
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
-            
+
             while (resultSet.next()) {
                 events.add(createEventFromResultSet(resultSet));
             }
         }
-        
+
         return events;
     }
 
@@ -142,20 +164,20 @@ public class EventService {
      * @return La liste des événements
      * @throws SQLException En cas d'erreur SQL
      */
-    public List<Event> getEventsByOrganiser(int userId) throws SQLException {
+    public List<Event> getEventsByUser(int userId) throws SQLException {
         List<Event> events = new ArrayList<>();
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id WHERE e.organiser_id = ?";
-        
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id WHERE e.user_id = ?";
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userId);
-            
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     events.add(createEventFromResultSet(resultSet));
                 }
             }
         }
-        
+
         return events;
     }
 
@@ -175,16 +197,16 @@ public class EventService {
         event.setMax_participants(resultSet.getInt("max_participants"));
         event.setStatus(resultSet.getString("status"));
         event.setImage(resultSet.getString("image"));
-        
+
         // Créer l'organisateur
-        User organiser = new User();
-        organiser.setId(resultSet.getInt("user_id"));
-        organiser.setNom(resultSet.getString("nom"));
-        organiser.setPrenom(resultSet.getString("prenom"));
-        organiser.setEmail(resultSet.getString("email"));
-        
-        event.setOrganiser(organiser);
-        
+        User user = new User();
+        user.setId(resultSet.getInt("user_id"));
+        user.setNom(resultSet.getString("nom"));
+        user.setPrenom(resultSet.getString("prenom"));
+        user.setEmail(resultSet.getString("email"));
+
+        event.setUser(user);
+
         return event;
     }
 }

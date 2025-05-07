@@ -78,7 +78,7 @@ public class ClientDashboardController implements Initializable {
         User currentUser = authService.getCurrentUser();
         if (currentUser != null) {
             userInfoText.setText("Connecté en tant que: " + currentUser.getPrenom() + " " + currentUser.getNom());
-            
+
             // Remplir les informations du profil
             nameText.setText(currentUser.getNom());
             firstNameText.setText(currentUser.getPrenom());
@@ -153,12 +153,46 @@ public class ClientDashboardController implements Initializable {
 
     @FXML
     public void handleSearchEvents(ActionEvent event) {
-        showAlert(Alert.AlertType.INFORMATION, "Information", "Fonctionnalité non implémentée");
+        try {
+            File file = new File("src/main/resources/fxml/event/EventList.fxml");
+            if (file.exists()) {
+                URL url = file.toURI().toURL();
+                FXMLLoader loader = new FXMLLoader(url);
+                Parent root = loader.load();
+
+                Stage stage = new Stage();
+                stage.setTitle("Liste des événements");
+                stage.setScene(new Scene(root));
+                stage.show();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'ouverture de la page des événements: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
     public void handleMyReservations(ActionEvent event) {
-        showAlert(Alert.AlertType.INFORMATION, "Information", "Fonctionnalité non implémentée");
+        try {
+            File file = new File("src/main/resources/fxml/event/ReservationList.fxml");
+            if (file.exists()) {
+                URL url = file.toURI().toURL();
+                FXMLLoader loader = new FXMLLoader(url);
+                Parent root = loader.load();
+
+                Stage stage = new Stage();
+                stage.setTitle("Mes réservations");
+                stage.setScene(new Scene(root));
+                stage.show();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'ouverture de la page des réservations: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
