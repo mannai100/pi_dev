@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -104,12 +105,14 @@ public class EventListController implements Initializable {
                             Label statusLabel = new Label("Statut: " + event.getStatus());
 
                             // Appliquer un style différent selon le statut
-                            if ("actif".equals(event.getStatus())) {
+                            if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
-                            } else if ("annulé".equals(event.getStatus())) {
+                            } else if ("annulé".equals(event.getStatus()) || "rejeté".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
                             } else if ("complet".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
+                            } else if ("en attente".equals(event.getStatus())) {
+                                statusLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold;");
                             }
 
                             // Ajouter un bouton pour voir les détails
@@ -168,12 +171,14 @@ public class EventListController implements Initializable {
 
             // Statut de l'événement
             Label statusLabel = new Label("Statut: " + event.getStatus());
-            if ("actif".equals(event.getStatus())) {
+            if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("annulé".equals(event.getStatus())) {
+            } else if ("annulé".equals(event.getStatus()) || "rejeté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
             } else if ("complet".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold; -fx-font-size: 14px;");
+            } else if ("en attente".equals(event.getStatus())) {
+                statusLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold; -fx-font-size: 14px;");
             }
 
             // Description de l'événement
@@ -295,18 +300,115 @@ public class EventListController implements Initializable {
             root.setLeft(imageContainer);
             root.setCenter(infoContainer);
 
-            // Bouton de fermeture en bas
+            // Boutons d'action en bas
+            HBox buttonBox = new HBox(10);
+            buttonBox.setAlignment(Pos.CENTER_RIGHT);
+            buttonBox.setPadding(new Insets(20, 0, 0, 0));
+
+            // Bouton de fermeture
             Button closeButton = new Button("Fermer");
             closeButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
             closeButton.setOnAction(e -> detailStage.close());
 
-            // Ajouter un effet hover au bouton
+            // Ajouter un effet hover au bouton de fermeture
             closeButton.setOnMouseEntered(e -> closeButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
             closeButton.setOnMouseExited(e -> closeButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
 
-            HBox buttonBox = new HBox(closeButton);
-            buttonBox.setAlignment(Pos.CENTER_RIGHT);
-            buttonBox.setPadding(new Insets(20, 0, 0, 0));
+            // Ajouter le bouton de fermeture
+            buttonBox.getChildren().add(closeButton);
+
+            // Si l'événement est en attente, ajouter les boutons d'approbation et de rejet
+            if ("en attente".equals(event.getStatus())) {
+                // Bouton d'approbation
+                Button approveButton = new Button("Approuver");
+                approveButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
+
+                // Bouton de rejet - Définir la variable avant de l'utiliser
+                Button rejectButton = new Button("Rejeter");
+                rejectButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
+
+                approveButton.setOnAction(e -> {
+                    try {
+                        // Mettre à jour le statut de l'événement
+                        EventService eventService = EventService.getInstance();
+                        eventService.updateEventStatus(event.getId(), EventService.STATUS_APPROVED);
+
+                        // Mettre à jour l'affichage
+                        statusLabel.setText("Statut: " + EventService.STATUS_APPROVED);
+                        statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+                        // Masquer les boutons d'approbation et de rejet
+                        buttonBox.getChildren().removeAll(approveButton, rejectButton);
+
+                        // Afficher un message de succès
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Succès");
+                        alert.setHeaderText("Événement approuvé");
+                        alert.setContentText("L'événement a été approuvé avec succès.");
+                        alert.showAndWait();
+
+                        // Rafraîchir la liste des événements
+                        loadEvents();
+                    } catch (Exception ex) {
+                        System.err.println("Erreur lors de l'approbation de l'événement: " + ex.getMessage());
+                        ex.printStackTrace();
+
+                        // Afficher un message d'erreur
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Erreur");
+                        alert.setHeaderText("Erreur lors de l'approbation de l'événement");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    }
+                });
+
+                // Ajouter un effet hover au bouton d'approbation
+                approveButton.setOnMouseEntered(e -> approveButton.setStyle("-fx-background-color: #219653; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+                approveButton.setOnMouseExited(e -> approveButton.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+
+                // Configuration du bouton de rejet
+                rejectButton.setOnAction(e -> {
+                    try {
+                        // Mettre à jour le statut de l'événement
+                        EventService eventService = EventService.getInstance();
+                        eventService.updateEventStatus(event.getId(), EventService.STATUS_REJECTED);
+
+                        // Mettre à jour l'affichage
+                        statusLabel.setText("Statut: " + EventService.STATUS_REJECTED);
+                        statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+                        // Masquer les boutons d'approbation et de rejet
+                        buttonBox.getChildren().removeAll(approveButton, rejectButton);
+
+                        // Afficher un message de succès
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Succès");
+                        alert.setHeaderText("Événement rejeté");
+                        alert.setContentText("L'événement a été rejeté avec succès.");
+                        alert.showAndWait();
+
+                        // Rafraîchir la liste des événements
+                        loadEvents();
+                    } catch (Exception ex) {
+                        System.err.println("Erreur lors du rejet de l'événement: " + ex.getMessage());
+                        ex.printStackTrace();
+
+                        // Afficher un message d'erreur
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Erreur");
+                        alert.setHeaderText("Erreur lors du rejet de l'événement");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    }
+                });
+
+                // Ajouter un effet hover au bouton de rejet
+                rejectButton.setOnMouseEntered(e -> rejectButton.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+                rejectButton.setOnMouseExited(e -> rejectButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+
+                // Ajouter les boutons d'approbation et de rejet
+                buttonBox.getChildren().addAll(approveButton, rejectButton);
+            }
 
             // Ajouter le bouton en bas
             VBox centerContainer = new VBox(infoContainer, buttonBox);

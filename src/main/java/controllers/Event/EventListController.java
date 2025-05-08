@@ -441,20 +441,39 @@ public class EventListController implements Initializable {
         try {
             List<Event> events = eventService.getAllEvents();
             eventList.clear();
-            eventList.addAll(events);
-
+            
+            // Récupérer l'utilisateur actuel
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin = roleService.isAdmin(currentUser);
+            
             // Vider le conteneur d'événements
             eventsContainer.getChildren().clear();
-
-            // Ajouter chaque événement au conteneur
+            
+            int visibleCount = 0;
+            
+            // Filtrer et ajouter chaque événement au conteneur
             for (Event event : events) {
-                // Créer un conteneur pour l'événement
-                HBox eventCard = createEventCard(event);
-                eventsContainer.getChildren().add(eventCard);
+                boolean isCreator = event.getUser() != null && 
+                                   currentUser != null && 
+                                   event.getUser().getId() == currentUser.getId();
+                
+                // Afficher l'événement si:
+                // 1. Il est actif (pour tous les utilisateurs)
+                // 2. OU l'utilisateur est admin (voit tout)
+                // 3. OU l'utilisateur est le créateur de l'événement
+                if ("actif".equals(event.getStatus()) || isAdmin || isCreator) {
+                    // Créer un conteneur pour l'événement
+                    HBox eventCard = createEventCard(event);
+                    eventsContainer.getChildren().add(eventCard);
+                    visibleCount++;
+                    
+                    // Ajouter l'événement à la liste observable
+                    eventList.add(event);
+                }
             }
-
+            
             // Mettre à jour le compteur d'événements
-            totalEventsText.setText("Total: " + events.size() + " événement(s)");
+            totalEventsText.setText("Total: " + visibleCount + " événement(s)");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des événements", e.getMessage());
             e.printStackTrace();
@@ -467,12 +486,20 @@ public class EventListController implements Initializable {
 
         try {
             List<Event> allEvents = eventService.getAllEvents();
-
+            
+            // Récupérer l'utilisateur actuel
+            User currentUser = authService.getCurrentUser();
+            boolean isAdmin = roleService.isAdmin(currentUser);
+            
             // Vider le conteneur d'événements
             eventsContainer.getChildren().clear();
-
+            
             int count = 0;
             for (Event event : allEvents) {
+                boolean isCreator = event.getUser() != null && 
+                                   currentUser != null && 
+                                   event.getUser().getId() == currentUser.getId();
+                
                 boolean matchesSearch = searchText.isEmpty() ||
                         event.getTitle().toLowerCase().contains(searchText) ||
                         event.getDescription().toLowerCase().contains(searchText);
@@ -480,14 +507,18 @@ public class EventListController implements Initializable {
                 boolean matchesStatus = "Tous".equals(statusText) ||
                         (event.getStatus() != null && event.getStatus().equals(statusText));
 
-                if (matchesSearch && matchesStatus) {
+                // Afficher l'événement si:
+                // 1. Il correspond aux critères de recherche et de statut
+                // 2. ET (il est actif OU l'utilisateur est admin OU l'utilisateur est le créateur)
+                if (matchesSearch && matchesStatus && 
+                    ("actif".equals(event.getStatus()) || isAdmin || isCreator)) {
                     // Créer un conteneur pour l'événement
                     HBox eventCard = createEventCard(event);
                     eventsContainer.getChildren().add(eventCard);
                     count++;
                 }
             }
-
+            
             // Mettre à jour le compteur d'événements
             totalEventsText.setText("Total: " + count + " événement(s)");
         } catch (SQLException e) {
@@ -620,6 +651,13 @@ public class EventListController implements Initializable {
 
         // Ajouter le conteneur d'informations et l'image au conteneur principal
         mainContainer.getChildren().addAll(infoContainer, imageContainer);
+
+        // Ajouter un indicateur visuel pour les événements en attente
+        if ("en attente".equals(event.getStatus())) {
+            Label pendingLabel = new Label("En attente d'approbation");
+            pendingLabel.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-padding: 5; -fx-background-radius: 3;");
+            infoContainer.getChildren().add(pendingLabel);
+        }
 
         return mainContainer;
     }

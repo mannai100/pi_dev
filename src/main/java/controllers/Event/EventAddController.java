@@ -107,8 +107,12 @@ public class EventAddController implements Initializable {
         // L'initialisation du spinner pour le nombre maximum de participants a été supprimée
 
         // Initialiser le combobox pour le statut
-        statusComboBox.getItems().addAll("actif", "annulé", "complet");
-        statusComboBox.setValue("actif");
+        statusComboBox.getItems().addAll("en attente");
+        statusComboBox.setValue("en attente");
+
+        // Désactiver le ComboBox pour que l'utilisateur ne puisse pas changer le statut initial
+        statusComboBox.setDisable(true);
+        statusComboBox.setTooltip(new Tooltip("Le statut initial d'un événement est 'en attente' jusqu'à ce qu'un administrateur l'approuve"));
 
         // Initialiser les date pickers
         dateDebutPicker.setValue(LocalDate.now());
@@ -119,7 +123,7 @@ public class EventAddController implements Initializable {
     }
 
     @FXML
-    public void handleSave(ActionEvent actionEvent) {  // Renommé de 'event' à 'actionEvent'
+    public void handleSave(ActionEvent actionEvent) {  // Renommé pour éviter la confusion avec la classe Event
         // Récupérer les valeurs des champs
         StringBuilder validationErrors = new StringBuilder();
 
@@ -185,6 +189,7 @@ public class EventAddController implements Initializable {
             showAlert(Alert.AlertType.ERROR, "Erreur de validation", "- " + dateFinError);
             return;
         }
+
         // La validation du nombre maximum de participants a été supprimée
 
         String status = statusComboBox.getValue();
@@ -208,11 +213,10 @@ public class EventAddController implements Initializable {
             event.setDescription(description);
             event.setDate_debut(dateDebutJava);
             event.setDate_fin(dateFinJava);
+            // Utiliser la valeur sélectionnée dans le ComboBox
             event.setStatus(status);
             // L'image sera définie après le téléchargement
             event.setUser(currentUser);
-
-            // L'événement a déjà été validé par les méthodes individuelles
 
             // Copier l'image dans le dossier des images
             String imagePath = saveImageToServer(selectedImageFile);
@@ -230,8 +234,10 @@ public class EventAddController implements Initializable {
             // Rafraîchir les statistiques du tableau de bord
             ClientDashboardController.refreshDashboardStatistics();
 
+            // Afficher un message de succès
+            showAlert(Alert.AlertType.INFORMATION, "Succès", "Votre événement a été ajouté avec succès et est en attente d'approbation par un administrateur.");
+
             // Fermer la fenêtre
-            showAlert(Alert.AlertType.INFORMATION, "Succès", "L'événement a été créé avec succès");
             closeWindow();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la création de l'événement: " + e.getMessage());

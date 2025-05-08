@@ -74,8 +74,8 @@
                 </HBox>
 
                 <VBox spacing="5">
-                    <Label text="Statut de l'événement" styleClass="form-label"/>
-                    <ComboBox fx:id="statusComboBox" prefWidth="150" styleClass="form-field" maxWidth="Infinity"/>
+                    <Label text="Statut" styleClass="form-label"/>
+                    <ComboBox fx:id="statusComboBox" promptText="Sélectionnez un statut" styleClass="form-field" maxWidth="Infinity"/>
                 </VBox>
 
                 <VBox spacing="5">

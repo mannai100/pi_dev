@@ -1,0 +1,251 @@
+package controllers.Event;
+
+import entities.Event;
+import entities.User;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
+import services.AuthService;
+import services.EventService;
+import utils.EventValidator;
+import controllers.ClientDashboardController;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.UUID;
+
+public class EventAddController implements Initializable {
+
+    @FXML
+    private TextField titleField;
+
+    @FXML
+    private TextArea descriptionArea;
+
+    @FXML
+    private DatePicker dateDebutPicker;
+
+    @FXML
+    private Spinner<Integer> heureDebutSpinner;
+
+    @FXML
+    private Spinner<Integer> minuteDebutSpinner;
+
+    @FXML
+    private DatePicker dateFinPicker;
+
+    @FXML
+    private Spinner<Integer> heureFinSpinner;
+
+    @FXML
+    private Spinner<Integer> minuteFinSpinner;
+
+    // Le champ maxParticipantsSpinner a été supprimé
+
+    @FXML
+    private ComboBox<String> statusComboBox;
+
+    @FXML
+    private TextField imageField;
+
+    @FXML
+    private Button browseButton;
+
+    @FXML
+    private ImageView imagePreview;
+
+    private File selectedImageFile;
+
+    @FXML
+    private Button saveButton;
+
+    @FXML
+    private Button cancelButton;
+
+    private EventService eventService;
+    private AuthService authService;
+
+    public EventAddController() {
+        eventService = EventService.getInstance();
+        authService = AuthService.getInstance();
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // Initialiser les spinners pour les heures et minutes
+        SpinnerValueFactory<Integer> heureDebutValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 8);
+        heureDebutSpinner.setValueFactory(heureDebutValueFactory);
+
+        SpinnerValueFactory<Integer> minuteDebutValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
+        minuteDebutSpinner.setValueFactory(minuteDebutValueFactory);
+
+        SpinnerValueFactory<Integer> heureFinValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 18);
+        heureFinSpinner.setValueFactory(heureFinValueFactory);
+
+        SpinnerValueFactory<Integer> minuteFinValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
+        minuteFinSpinner.setValueFactory(minuteFinValueFactory);
+
+        // L'initialisation du spinner pour le nombre maximum de participants a été supprimée
+
+        // Initialiser le combobox pour le statut
+        statusComboBox.getItems().addAll("actif", "annulé", "complet");
+        statusComboBox.setValue("actif");
+
+        // Initialiser les date pickers
+        dateDebutPicker.setValue(LocalDate.now());
+        dateFinPicker.setValue(LocalDate.now());
+
+        // Désactiver le champ de texte pour l'image (lecture seule)
+        imageField.setEditable(false);
+    }
+
+    @FXML
+    public void handleSave(ActionEvent event) {
+        try {
+            // Récupérer les valeurs des champs
+            String title = titleField.getText();
+            String description = descriptionArea.getText();
+            Date startDate = Date.from(startDatePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Date endDate = Date.from(endDatePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+            // Autres champs...
+            
+            // Créer un nouvel événement
+            Event newEvent = new Event();
+            newEvent.setTitle(title);
+            newEvent.setDescription(description);
+            newEvent.setDate_debut(startDate);
+            newEvent.setDate_fin(endDate);
+            // Définir automatiquement le statut "en attente"
+            newEvent.setStatus("en attente");
+            // Autres propriétés...
+            
+            // Définir l'utilisateur actuel comme créateur
+            User currentUser = authService.getCurrentUser();
+            newEvent.setUser(currentUser);
+            
+            // Enregistrer l'événement
+            boolean success = eventService.addEvent(newEvent);
+            
+            if (success) {
+                // Afficher un message de succès
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Succès");
+                alert.setHeaderText("Événement ajouté");
+                alert.setContentText("Votre événement a été ajouté avec succès et est en attente d'approbation par un administrateur.");
+                alert.showAndWait();
+                
+                // Fermer la fenêtre
+                ((Stage) titleField.getScene().getWindow()).close();
+            } else {
+                // Afficher un message d'erreur
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur");
+                alert.setHeaderText("Erreur lors de l'ajout");
+                alert.setContentText("Une erreur est survenue lors de l'ajout de l'événement.");
+                alert.showAndWait();
+            }
+        } catch (Exception e) {
+            // Gérer les exceptions
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setHeaderText("Erreur lors de l'ajout");
+            alert.setContentText("Une erreur est survenue: " + e.getMessage());
+            alert.showAndWait();
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void handleCancel(ActionEvent event) {
+        closeWindow();
+    }
+
+    private void closeWindow() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    public void handleBrowseImage(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Sélectionner une image");
+        fileChooser.getExtensionFilters().addAll(
+            new ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp")
+        );
+
+        // Ouvrir le sélecteur de fichiers
+        File selectedFile = fileChooser.showOpenDialog(imageField.getScene().getWindow());
+        if (selectedFile != null) {
+            selectedImageFile = selectedFile;
+            imageField.setText(selectedFile.getName());
+
+            // Afficher un aperçu de l'image
+            try {
+                Image image = new Image(selectedFile.toURI().toString());
+                imagePreview.setImage(image);
+                imagePreview.setVisible(true);
+            } catch (Exception e) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger l'aperçu de l'image: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Enregistre l'image sélectionnée sur le serveur
+     * @param imageFile Le fichier image à enregistrer
+     * @return Le chemin relatif de l'image enregistrée, ou null en cas d'erreur
+     */
+    private String saveImageToServer(File imageFile) {
+        if (imageFile == null) {
+            return null;
+        }
+
+        try {
+            // Créer le dossier d'images s'il n'existe pas
+            Path uploadDir = Paths.get("src/main/resources/images/events");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            // Générer un nom de fichier unique
+            String fileName = UUID.randomUUID().toString() + "_" + imageFile.getName();
+            Path destination = uploadDir.resolve(fileName);
+
+            // Copier le fichier
+            Files.copy(imageFile.toPath(), destination, StandardCopyOption.REPLACE_EXISTING);
+
+            // Retourner le chemin relatif
+            return "/images/events/" + fileName;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void showAlert(Alert.AlertType alertType, String title, String content) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+}

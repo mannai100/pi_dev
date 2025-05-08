@@ -2,6 +2,7 @@ package services;
 
 import entities.Event;
 import entities.User;
+import services.SMSService;
 import utils.EventValidator;
 import utils.MyDatabase;
 
@@ -17,6 +18,14 @@ import java.util.List;
 public class EventService {
     private static EventService instance;
     private final Connection connection;
+
+    // Constantes pour les statuts d'événement
+    public static final String STATUS_PENDING = "en attente";
+    public static final String STATUS_APPROVED = "accepté";
+    public static final String STATUS_REJECTED = "rejeté";
+    public static final String STATUS_ACTIVE = "actif";
+    public static final String STATUS_CANCELLED = "annulé";
+    public static final String STATUS_COMPLETED = "complet";
 
     /**
      * Constructeur privé pour le pattern Singleton
@@ -49,6 +58,11 @@ public class EventService {
             throw new IllegalArgumentException(EventValidator.formatErrors(errors));
         }
 
+        // Définir le statut par défaut à "en attente" si non spécifié
+        if (event.getStatus() == null || event.getStatus().isEmpty()) {
+            event.setStatus(STATUS_PENDING);
+        }
+
         String query = "INSERT INTO event (user_id, title, description, date_debut, date_fin, status, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, event.getUser().getId());
@@ -67,6 +81,9 @@ public class EventService {
                     event.setId(generatedKeys.getInt(1));
                 }
             }
+
+            // Envoyer un SMS à l'administrateur pour l'informer du nouvel événement
+            sendNewEventSMS(event);
         }
     }
 
@@ -99,6 +116,115 @@ public class EventService {
             statement.setInt(7, event.getId());
 
             statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Mettre à jour le statut d'un événement
+     * @param eventId L'ID de l'événement
+     * @param status Le nouveau statut
+     * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement n'existe pas
+     */
+    public void updateEventStatus(int eventId, String status) throws SQLException, IllegalArgumentException {
+        // Vérifier que l'événement existe
+        Event event = getEventById(eventId);
+        if (event == null) {
+            throw new IllegalArgumentException("L'événement n'existe pas");
+        }
+
+        // Vérifier que le statut est valide
+        if (!isValidStatus(status)) {
+            throw new IllegalArgumentException("Le statut n'est pas valide");
+        }
+
+        String query = "UPDATE event SET status = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, status);
+            statement.setInt(2, eventId);
+
+            statement.executeUpdate();
+
+            // Si le statut est accepté, envoyer un SMS à l'administrateur
+            if (status.equals(STATUS_APPROVED)) {
+                // Récupérer les informations de l'événement pour le SMS
+                String eventTitle = event.getTitle();
+                String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
+
+                // Envoyer un SMS à l'administrateur
+                sendEventApprovalSMS(eventTitle, userName);
+            }
+        }
+    }
+
+    /**
+     * Vérifier si un statut est valide
+     * @param status Le statut à vérifier
+     * @return true si le statut est valide, false sinon
+     */
+    private boolean isValidStatus(String status) {
+        return status != null && (
+            status.equals(STATUS_PENDING) ||
+            status.equals(STATUS_APPROVED) ||
+            status.equals(STATUS_REJECTED) ||
+            status.equals(STATUS_ACTIVE) ||
+            status.equals(STATUS_CANCELLED) ||
+            status.equals(STATUS_COMPLETED)
+        );
+    }
+
+    /**
+     * Envoyer un SMS pour notifier de l'approbation d'un événement
+     * @param eventTitle Le titre de l'événement
+     * @param userName Le nom de l'utilisateur qui a créé l'événement
+     */
+    private void sendEventApprovalSMS(String eventTitle, String userName) {
+        try {
+            // Numéro de téléphone de l'administrateur
+            String adminPhoneNumber = "+21655667940";
+
+            // Message à envoyer
+            String message = "Un nouvel événement a été approuvé: '" + eventTitle + "' créé par " + userName;
+
+            // Envoyer le SMS
+            SMSService.sendSMS(adminPhoneNumber, message);
+
+            System.out.println("SMS envoyé à l'administrateur: " + message);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Envoyer un SMS pour notifier de la création d'un nouvel événement
+     * @param event L'événement créé
+     */
+    private void sendNewEventSMS(Event event) {
+        try {
+            // Vérifier que l'événement et l'utilisateur ne sont pas null
+            if (event == null || event.getUser() == null) {
+                System.err.println("Impossible d'envoyer le SMS: événement ou utilisateur null");
+                return;
+            }
+
+            // Numéro de téléphone de l'administrateur
+            String adminPhoneNumber = "+21655667940";
+
+            // Récupérer les informations de l'événement pour le SMS
+            String eventTitle = event.getTitle();
+            String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
+
+            // Message à envoyer
+            String message = "Nouvel événement en attente d'approbation: '" + eventTitle + "' créé par " + userName;
+
+            // Envoyer le SMS
+            SMSService.sendSMS(adminPhoneNumber, message);
+
+            System.out.println("SMS envoyé à l'administrateur: " + message);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
