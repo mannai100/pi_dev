@@ -13,10 +13,21 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Pagination;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -27,9 +38,8 @@ import javafx.util.Callback;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.IOException;
-import services.EventService;
-
 import java.net.URL;
+import services.EventService;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -102,18 +112,16 @@ public class EventListController implements Initializable {
                                 statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
                             }
 
-                            // Ajouter des boutons d'action
+                            // Ajouter un bouton pour voir les détails
                             HBox actionButtons = new HBox(10);
+                            actionButtons.setAlignment(Pos.CENTER_RIGHT);
 
-                            Button viewButton = new Button("Voir");
-                            viewButton.getStyleClass().add("view-button");
+                            Button viewButton = new Button("Voir les détails");
+                            viewButton.getStyleClass().addAll("view-button", "action-button");
+                            viewButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white;");
                             viewButton.setOnAction(e -> handleViewEvent(event));
 
-                            Button editButton = new Button("Modifier");
-                            editButton.getStyleClass().add("edit-button");
-                            editButton.setOnAction(e -> handleEditEvent(event));
-
-                            actionButtons.getChildren().addAll(viewButton, editButton);
+                            actionButtons.getChildren().add(viewButton);
 
                             container.getChildren().addAll(titleLabel, dateLabel, statusLabel, actionButtons);
                             setGraphic(container);
@@ -132,12 +140,194 @@ public class EventListController implements Initializable {
 
     private void handleViewEvent(Event event) {
         System.out.println("Voir l'événement: " + event.getTitle());
-        // Implémenter la logique pour afficher les détails de l'événement
-    }
 
-    private void handleEditEvent(Event event) {
-        System.out.println("Modifier l'événement: " + event.getTitle());
-        // Implémenter la logique pour modifier l'événement
+        try {
+            // Créer une nouvelle fenêtre pour afficher les détails
+            Stage detailStage = new Stage();
+            detailStage.setTitle("Détails de l'événement: " + event.getTitle());
+
+            // Créer le conteneur principal
+            BorderPane root = new BorderPane();
+            root.setPadding(new Insets(20));
+            root.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f7fa, #e5e9f2); -fx-background-radius: 10;");
+
+            // Conteneur pour les informations
+            VBox infoContainer = new VBox(15);
+            infoContainer.setPadding(new Insets(0, 0, 0, 20));
+            infoContainer.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5); -fx-padding: 20;");
+
+            // Titre de l'événement
+            Label titleLabel = new Label(event.getTitle());
+            titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+            // Dates de l'événement
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy HH:mm");
+            String dateInfo = "Du " + dateFormat.format(event.getDate_debut()) + "\nau " + dateFormat.format(event.getDate_fin());
+            Label dateLabel = new Label(dateInfo);
+            dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+
+            // Statut de l'événement
+            Label statusLabel = new Label("Statut: " + event.getStatus());
+            if ("actif".equals(event.getStatus())) {
+                statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
+            } else if ("annulé".equals(event.getStatus())) {
+                statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
+            } else if ("complet".equals(event.getStatus())) {
+                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold; -fx-font-size: 14px;");
+            }
+
+            // Description de l'événement
+            Label descriptionTitle = new Label("Description:");
+            descriptionTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+            Label descriptionLabel = new Label(event.getDescription() != null ? event.getDescription() : "Aucune description disponible");
+            descriptionLabel.setWrapText(true);
+            descriptionLabel.setMaxWidth(400);
+
+
+            // Créer des séparateurs stylés
+            Separator sep1 = new Separator();
+            sep1.setStyle("-fx-background-color: #e0e0e0;");
+
+            Separator sep2 = new Separator();
+            sep2.setStyle("-fx-background-color: #e0e0e0;");
+
+            Separator sep3 = new Separator();
+            sep3.setStyle("-fx-background-color: #e0e0e0;");
+
+            // Ajouter tous les éléments au conteneur d'informations
+            infoContainer.getChildren().addAll(
+                titleLabel,
+                dateLabel,
+                statusLabel,
+                sep1,
+                descriptionTitle,
+                descriptionLabel
+            );
+
+            // Essayer de charger l'image de l'événement
+            ImageView imageView = new ImageView();
+            imageView.setFitWidth(300);
+            imageView.setFitHeight(200);
+            imageView.setPreserveRatio(true);
+
+            // Utiliser une image par défaut générée programmatiquement
+            Rectangle placeholder = new Rectangle(300, 200);
+            placeholder.setFill(Color.web("#3498db"));
+
+            // Créer un texte pour l'image par défaut
+            Text placeholderText = new Text(event.getTitle());
+            placeholderText.setFill(Color.WHITE);
+            placeholderText.setFont(Font.font("System", FontWeight.BOLD, 18));
+            placeholderText.setTextAlignment(TextAlignment.CENTER);
+            placeholderText.setWrappingWidth(280);
+
+            // Créer un StackPane pour combiner le rectangle et le texte
+            StackPane placeholderImage = new StackPane(placeholder, placeholderText);
+
+            try {
+                // Si l'événement a une image, essayer de la charger
+                if (event.getImage() != null && !event.getImage().isEmpty()) {
+                    try {
+                        // Construire le chemin correct vers l'image
+                        String imagePath = event.getImage();
+
+                        // Vérifier si le chemin commence déjà par "/images/events/"
+                        if (!imagePath.startsWith("/images/events/")) {
+                            // Si le chemin est juste le nom du fichier, ajouter le préfixe
+                            if (!imagePath.startsWith("/")) {
+                                imagePath = "/images/events/" + imagePath;
+                            }
+                        }
+
+                        // Obtenir l'URL de l'image depuis les ressources
+                        URL imageUrl = getClass().getResource(imagePath);
+
+                        if (imageUrl != null) {
+                            // Charger l'image depuis l'URL
+                            Image image = new Image(imageUrl.toExternalForm());
+                            imageView.setImage(image);
+                            System.out.println("Image chargée avec succès: " + imageUrl);
+                        } else {
+                            // Essayer avec le chemin absolu
+                            try {
+                                Image image = new Image("file:" + System.getProperty("user.dir") + "/src/main/resources" + imagePath);
+                                if (!image.isError()) {
+                                    imageView.setImage(image);
+                                    System.out.println("Image chargée avec succès depuis le chemin absolu");
+                                } else {
+                                    throw new Exception("Impossible de charger l'image depuis le chemin absolu");
+                                }
+                            } catch (Exception ex) {
+                                System.err.println("Erreur lors du chargement de l'image depuis le chemin absolu: " + ex.getMessage());
+                                imageView = null;
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors du chargement de l'image: " + e.getMessage());
+                        imageView = null;
+                    }
+                } else {
+                    // Aucune image spécifiée, utiliser l'image par défaut générée
+                    imageView = null;
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur lors du traitement de l'image: " + e.getMessage());
+                imageView = null;
+            }
+
+            // Créer un conteneur pour l'image avec un cadre et des effets
+            VBox imageContainer = new VBox();
+            imageContainer.setStyle("-fx-border-color: #bdc3c7; -fx-border-width: 1px; -fx-padding: 10px; -fx-background-color: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
+            imageContainer.setAlignment(Pos.CENTER);
+            imageContainer.setMinWidth(320);
+            imageContainer.setMaxWidth(320);
+            imageContainer.setPadding(new Insets(10));
+
+            // Ajouter soit l'image chargée, soit l'image par défaut générée
+            if (imageView != null && imageView.getImage() != null) {
+                imageContainer.getChildren().add(imageView);
+            } else {
+                imageContainer.getChildren().add(placeholderImage);
+            }
+
+            // Ajouter l'image à gauche et les informations à droite
+            root.setLeft(imageContainer);
+            root.setCenter(infoContainer);
+
+            // Bouton de fermeture en bas
+            Button closeButton = new Button("Fermer");
+            closeButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
+            closeButton.setOnAction(e -> detailStage.close());
+
+            // Ajouter un effet hover au bouton
+            closeButton.setOnMouseEntered(e -> closeButton.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+            closeButton.setOnMouseExited(e -> closeButton.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+
+            HBox buttonBox = new HBox(closeButton);
+            buttonBox.setAlignment(Pos.CENTER_RIGHT);
+            buttonBox.setPadding(new Insets(20, 0, 0, 0));
+
+            // Ajouter le bouton en bas
+            VBox centerContainer = new VBox(infoContainer, buttonBox);
+            root.setCenter(centerContainer);
+
+            // Configurer et afficher la fenêtre
+            Scene scene = new Scene(root, 900, 650);
+            scene.getStylesheets().add(getClass().getResource("/styles/admin-styles.css").toExternalForm());
+
+            detailStage.setScene(scene);
+            detailStage.setMinWidth(900);
+            detailStage.setMinHeight(650);
+            detailStage.show();
+
+            // Centrer la fenêtre sur l'écran
+            detailStage.centerOnScreen();
+
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'affichage des détails de l'événement: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -250,11 +440,7 @@ public class EventListController implements Initializable {
         }
     }
 
-    @FXML
-    private void handleAdd(ActionEvent event) {
-        // Ouvrir le formulaire d'ajout d'événement
-        System.out.println("Ouverture du formulaire d'ajout d'événement");
-    }
+
 
     @FXML
     private void handleRefresh(ActionEvent event) {
