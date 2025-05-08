@@ -12,7 +12,7 @@ public class Event {
     private String description;
     private Date date_debut;
     private Date date_fin;
-    private int max_participants;
+    // Le champ max_participants a été supprimé
     private String status;
     private String image;
 
@@ -29,18 +29,17 @@ public class Event {
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
      * @param date_fin Date de fin de l'événement
-     * @param max_participants Nombre maximum de participants
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(int id, User user, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
+    public Event(int id, User user, String title, String description, Date date_debut, Date date_fin, String status, String image) {
         this.id = id;
         this.user = user;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
         this.date_fin = date_fin;
-        this.max_participants = max_participants;
+        // Le champ max_participants a été supprimé
         this.status = status;
         this.image = image;
     }
@@ -51,17 +50,16 @@ public class Event {
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
      * @param date_fin Date de fin de l'événement
-     * @param max_participants Nombre maximum de participants
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(User user, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
+    public Event(User user, String title, String description, Date date_debut, Date date_fin, String status, String image) {
         this.user = user;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
         this.date_fin = date_fin;
-        this.max_participants = max_participants;
+        // Le champ max_participants a été supprimé
         this.status = status;
         this.image = image;
     }
@@ -115,13 +113,7 @@ public class Event {
         this.date_fin = date_fin;
     }
 
-    public int getMax_participants() {
-        return max_participants;
-    }
-
-    public void setMax_participants(int max_participants) {
-        this.max_participants = max_participants;
-    }
+    // Les getters et setters pour max_participants ont été supprimés
 
     public String getStatus() {
         return status;
@@ -148,7 +140,7 @@ public class Event {
                 ", description='" + description + '\'' +
                 ", date_debut=" + date_debut +
                 ", date_fin=" + date_fin +
-                ", max_participants=" + max_participants +
+                // Le champ max_participants a été supprimé +
                 ", status='" + status + '\'' +
                 ", image='" + image + '\'' +
                 '}';

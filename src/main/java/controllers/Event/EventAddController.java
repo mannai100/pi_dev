@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 import services.AuthService;
 import services.EventService;
 import utils.EventValidator;
+import controllers.ClientDashboardController;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,8 +59,7 @@ public class EventAddController implements Initializable {
     @FXML
     private Spinner<Integer> minuteFinSpinner;
 
-    @FXML
-    private Spinner<Integer> maxParticipantsSpinner;
+    // Le champ maxParticipantsSpinner a été supprimé
 
     @FXML
     private ComboBox<String> statusComboBox;
@@ -104,9 +104,7 @@ public class EventAddController implements Initializable {
         SpinnerValueFactory<Integer> minuteFinValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
         minuteFinSpinner.setValueFactory(minuteFinValueFactory);
 
-        // Initialiser le spinner pour le nombre maximum de participants
-        SpinnerValueFactory<Integer> maxParticipantsValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 1000, 50);
-        maxParticipantsSpinner.setValueFactory(maxParticipantsValueFactory);
+        // L'initialisation du spinner pour le nombre maximum de participants a été supprimée
 
         // Initialiser le combobox pour le statut
         statusComboBox.getItems().addAll("actif", "annulé", "complet");
@@ -187,14 +185,7 @@ public class EventAddController implements Initializable {
             showAlert(Alert.AlertType.ERROR, "Erreur de validation", "- " + dateFinError);
             return;
         }
-        /**
-        int maxParticipants = maxParticipantsSpinner.getValue();
-        String maxParticipantsError = EventValidator.isValidMaxParticipants(maxParticipants);
-        if (maxParticipantsError != null) {
-            showAlert(Alert.AlertType.ERROR, "Erreur de validation", "- " + maxParticipantsError);
-            return;
-        }
-        */
+        // La validation du nombre maximum de participants a été supprimée
 
         String status = statusComboBox.getValue();
         String statusError = EventValidator.isValidStatus(status);
@@ -235,6 +226,9 @@ public class EventAddController implements Initializable {
 
             // Enregistrer l'événement
             eventService.addEvent(event);
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
 
             // Fermer la fenêtre
             showAlert(Alert.AlertType.INFORMATION, "Succès", "L'événement a été créé avec succès");

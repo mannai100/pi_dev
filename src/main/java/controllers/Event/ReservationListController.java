@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import services.AuthService;
 import services.ReservationService;
 import services.RoleService;
+import controllers.ClientDashboardController;
 
 import java.io.File;
 import java.io.IOException;
@@ -298,6 +299,10 @@ public class ReservationListController implements Initializable {
         try {
             reservationService.updateReservationStatus(reservation.getId(), "confirmé");
             loadReservations();
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
+
             showAlert(Alert.AlertType.INFORMATION, "Succès", "La réservation a été confirmée avec succès");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la confirmation de la réservation", e.getMessage());
@@ -318,6 +323,10 @@ public class ReservationListController implements Initializable {
             try {
                 reservationService.updateReservationStatus(reservation.getId(), "annulé");
                 loadReservations();
+
+                // Rafraîchir les statistiques du tableau de bord
+                ClientDashboardController.refreshDashboardStatistics();
+
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "La réservation a été annulée avec succès");
             } catch (SQLException e) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'annulation de la réservation", e.getMessage());

@@ -73,17 +73,10 @@
                     </VBox>
                 </HBox>
 
-                <HBox spacing="20">
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="Nombre maximum de participants" styleClass="form-label"/>
-                        <Spinner fx:id="maxParticipantsSpinner" prefWidth="150" editable="true" styleClass="form-field"/>
-                    </VBox>
-
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="Statut de l'événement" styleClass="form-label"/>
-                        <ComboBox fx:id="statusComboBox" prefWidth="150" styleClass="form-field" maxWidth="Infinity"/>
-                    </VBox>
-                </HBox>
+                <VBox spacing="5">
+                    <Label text="Statut de l'événement" styleClass="form-label"/>
+                    <ComboBox fx:id="statusComboBox" prefWidth="150" styleClass="form-field" maxWidth="Infinity"/>
+                </VBox>
 
                 <VBox spacing="5">
                     <Label text="Image de l'événement" styleClass="form-label"/>

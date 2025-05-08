@@ -28,6 +28,7 @@ import services.AuthService;
 import services.EventService;
 import services.ReservationService;
 import services.RoleService;
+import controllers.ClientDashboardController;
 
 import java.io.File;
 import java.io.IOException;
@@ -640,6 +641,9 @@ public class EventListController implements Initializable {
 
                 // Recharger les événements après l'ajout
                 loadEvents();
+
+                // Rafraîchir les statistiques du tableau de bord
+                ClientDashboardController.refreshDashboardStatistics();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier FXML non trouvé", file.getAbsolutePath());
             }
@@ -693,6 +697,9 @@ public class EventListController implements Initializable {
 
                 // Recharger les événements après la modification
                 loadEvents();
+
+                // Rafraîchir les statistiques du tableau de bord
+                ClientDashboardController.refreshDashboardStatistics();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier FXML non trouvé", file.getAbsolutePath());
             }
@@ -753,6 +760,9 @@ public class EventListController implements Initializable {
             // Créer la réservation
             boolean success = reservationService.addReservation(currentUser.getId(), event.getId());
             if (success) {
+                // Rafraîchir les statistiques du tableau de bord
+                ClientDashboardController.refreshDashboardStatistics();
+
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Réservation confirmée", "Votre réservation a été enregistrée avec succès");
             } else {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur de réservation", "Une erreur est survenue lors de la réservation");
@@ -774,6 +784,10 @@ public class EventListController implements Initializable {
             try {
                 eventService.deleteEvent(event.getId());
                 loadEvents();
+
+                // Rafraîchir les statistiques du tableau de bord
+                ClientDashboardController.refreshDashboardStatistics();
+
                 showAlert(Alert.AlertType.INFORMATION, "Succès", "Événement supprimé", "L'événement a été supprimé avec succès.");
             } catch (SQLException e) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la suppression de l'événement", e.getMessage());

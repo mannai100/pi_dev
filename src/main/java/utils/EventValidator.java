@@ -94,20 +94,15 @@ public class EventValidator {
             return "La date de fin doit être après la date de début";
         }
 
-        // Si les dates sont identiques, vérifier les heures
-        if (dateDebut != null && isSameDay(dateDebut, dateFin)) {
-            Calendar debutCal = Calendar.getInstance();
-            debutCal.setTime(dateDebut);
-            int heureDebut = debutCal.get(Calendar.HOUR_OF_DAY);
-            int minuteDebut = debutCal.get(Calendar.MINUTE);
+        // Vérifier qu'il y a au moins une heure de différence entre la date de début et la date de fin
+        if (dateDebut != null) {
+            // Calculer la différence en millisecondes
+            long differenceMillis = dateFin.getTime() - dateDebut.getTime();
+            // Convertir en heures
+            long differenceHeures = differenceMillis / (60 * 60 * 1000);
 
-            Calendar finCal = Calendar.getInstance();
-            finCal.setTime(dateFin);
-            int heureFin = finCal.get(Calendar.HOUR_OF_DAY);
-            int minuteFin = finCal.get(Calendar.MINUTE);
-
-            if (heureFin < heureDebut || (heureFin == heureDebut && minuteFin <= minuteDebut)) {
-                return "L'heure de fin doit être après l'heure de début";
+            if (differenceHeures < 1) {
+                return "Il doit y avoir au moins une heure de différence entre la date de début et la date de fin";
             }
         }
 
@@ -130,21 +125,7 @@ public class EventValidator {
                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
     }
 
-    /**
-     * Valide le nombre maximum de participants
-     * @param maxParticipants Le nombre maximum de participants
-     * @return Un message d'erreur ou null si le nombre est valide
-     */
-    /**
-    public static String isValidMaxParticipants(int maxParticipants) {
-        if (maxParticipants <= 0) {
-            return "Le nombre maximum de participants doit être supérieur à 0";
-        }
-        if (maxParticipants > 10000) {
-            return "Le nombre maximum de participants ne peut pas dépasser 10000";
-        }
-        return null;
-    } */
+    // La validation du nombre maximum de participants a été supprimée
 
     /**
      * Valide le statut d'un événement
@@ -219,11 +200,7 @@ public class EventValidator {
             errors.put("date_fin", dateFinError);
         }
 
-        // Validation du nombre maximum de participants
-        //  String maxParticipantsError = isValidMaxParticipants(event.getMax_participants());
-        // if (maxParticipantsError != null) {
-        //   errors.put("max_participants", maxParticipantsError);
-        // }
+        // La validation du nombre maximum de participants a été supprimée
 
         // Validation du statut
         String statusError = isValidStatus(event.getStatus());

@@ -1,0 +1,351 @@
+package controllers.Admin;
+
+import entities.Event;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.Pagination;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.Node;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.util.Callback;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.io.IOException;
+import services.EventService;
+
+import java.net.URL;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.ResourceBundle;
+
+public class EventListController implements Initializable {
+
+    @FXML
+    private ListView<Event> eventListView;
+
+    @FXML
+    private Button backButton;
+
+    @FXML
+    private TextField searchField;
+
+    @FXML
+    private Pagination eventPagination;
+
+    private EventService eventService;
+
+    private ObservableList<Event> allEvents = FXCollections.observableArrayList();
+    private FilteredList<Event> filteredEvents;
+    private static final int ITEMS_PER_PAGE = 5;
+
+    public EventListController() {
+        eventService = EventService.getInstance();
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // Configurer la pagination
+        eventPagination.setPageFactory(this::createPage);
+
+        // Configurer la ListView pour afficher les événements
+        eventListView.setCellFactory(new Callback<ListView<Event>, ListCell<Event>>() {
+            @Override
+            public ListCell<Event> call(ListView<Event> param) {
+                return new ListCell<Event>() {
+                    @Override
+                    protected void updateItem(Event event, boolean empty) {
+                        super.updateItem(event, empty);
+                        if (empty || event == null) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            // Créer un conteneur pour une meilleure présentation
+                            VBox container = new VBox(5);
+                            container.setPadding(new Insets(5, 0, 5, 0));
+
+                            // Titre de l'événement
+                            Label titleLabel = new Label(event.getTitle());
+                            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+                            // Dates de l'événement
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                            String dateInfo = "Du " + dateFormat.format(event.getDate_debut()) +
+                                             " au " + dateFormat.format(event.getDate_fin());
+                            Label dateLabel = new Label(dateInfo);
+                            dateLabel.setStyle("-fx-font-size: 12px;");
+
+                            // Statut de l'événement
+                            Label statusLabel = new Label("Statut: " + event.getStatus());
+
+                            // Appliquer un style différent selon le statut
+                            if ("actif".equals(event.getStatus())) {
+                                statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                            } else if ("annulé".equals(event.getStatus())) {
+                                statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                            } else if ("complet".equals(event.getStatus())) {
+                                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
+                            }
+
+                            // Ajouter des boutons d'action
+                            HBox actionButtons = new HBox(10);
+
+                            Button viewButton = new Button("Voir");
+                            viewButton.getStyleClass().add("view-button");
+                            viewButton.setOnAction(e -> handleViewEvent(event));
+
+                            Button editButton = new Button("Modifier");
+                            editButton.getStyleClass().add("edit-button");
+                            editButton.setOnAction(e -> handleEditEvent(event));
+
+                            actionButtons.getChildren().addAll(viewButton, editButton);
+
+                            container.getChildren().addAll(titleLabel, dateLabel, statusLabel, actionButtons);
+                            setGraphic(container);
+                        }
+                    }
+                };
+            }
+        });
+
+        // Charger les données
+        loadEvents();
+
+        // Configurer la recherche en temps réel
+        setupSearch();
+    }
+
+    private void handleViewEvent(Event event) {
+        System.out.println("Voir l'événement: " + event.getTitle());
+        // Implémenter la logique pour afficher les détails de l'événement
+    }
+
+    private void handleEditEvent(Event event) {
+        System.out.println("Modifier l'événement: " + event.getTitle());
+        // Implémenter la logique pour modifier l'événement
+    }
+
+    @FXML
+    private void handleBack(ActionEvent event) {
+        navigateToDashboard();
+    }
+
+    private void navigateToDashboard() {
+        try {
+            URL url = getClass().getResource("/fxml/admin/AdminDashboard.fxml");
+            if (url == null) {
+                System.err.println("Impossible de trouver le fichier FXML: /fxml/admin/AdminDashboard.fxml");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            Stage stage = (Stage) eventListView.getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Panneau d'administration");
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la navigation: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void loadEvents() {
+        try {
+            List<Event> events = eventService.getAllEvents();
+            allEvents.setAll(events);
+
+            // Initialiser la liste filtrée avec tous les événements
+            filteredEvents = new FilteredList<>(allEvents, p -> true);
+
+            // Configurer la pagination
+            int pageCount = (filteredEvents.size() / ITEMS_PER_PAGE) + (filteredEvents.size() % ITEMS_PER_PAGE > 0 ? 1 : 0);
+            eventPagination.setPageCount(Math.max(1, pageCount));
+            eventPagination.setCurrentPageIndex(0);
+
+            // Mettre à jour la ListView avec la première page
+            updateListView(0);
+
+            // Le compteur d'événements a été supprimé
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Afficher un message d'erreur
+
+            // En cas d'erreur, afficher des données factices pour la démonstration
+            Event event1 = new Event();
+            event1.setId(1);
+            event1.setTitle("Conférence JavaFX");
+            event1.setStatus("actif");
+            // Ajouter des dates pour éviter les NullPointerException
+            event1.setDate_debut(new Date());
+            event1.setDate_fin(new Date());
+
+            Event event2 = new Event();
+            event2.setId(2);
+            event2.setTitle("Workshop UI/UX");
+            event2.setStatus("actif");
+            // Ajouter des dates pour éviter les NullPointerException
+            event2.setDate_debut(new Date());
+            event2.setDate_fin(new Date());
+
+            Event event3 = new Event();
+            event3.setId(3);
+            event3.setTitle("Hackathon IA");
+            event3.setStatus("actif");
+            event3.setDate_debut(new Date());
+            event3.setDate_fin(new Date());
+
+            Event event4 = new Event();
+            event4.setId(4);
+            event4.setTitle("Formation Spring Boot");
+            event4.setStatus("actif");
+            event4.setDate_debut(new Date());
+            event4.setDate_fin(new Date());
+
+            Event event5 = new Event();
+            event5.setId(5);
+            event5.setTitle("Séminaire DevOps");
+            event5.setStatus("actif");
+            event5.setDate_debut(new Date());
+            event5.setDate_fin(new Date());
+
+            Event event6 = new Event();
+            event6.setId(6);
+            event6.setTitle("Atelier Mobile Development");
+            event6.setStatus("actif");
+            event6.setDate_debut(new Date());
+            event6.setDate_fin(new Date());
+
+            ObservableList<Event> demoEvents = FXCollections.observableArrayList(event1, event2, event3, event4, event5, event6);
+            allEvents.setAll(demoEvents);
+
+            // Initialiser la liste filtrée avec les événements de démo
+            filteredEvents = new FilteredList<>(allEvents, p -> true);
+
+            // Configurer la pagination
+            int pageCount = (filteredEvents.size() / ITEMS_PER_PAGE) + (filteredEvents.size() % ITEMS_PER_PAGE > 0 ? 1 : 0);
+            eventPagination.setPageCount(Math.max(1, pageCount));
+            eventPagination.setCurrentPageIndex(0);
+
+            // Mettre à jour la ListView avec la première page
+            updateListView(0);
+
+            // Le compteur d'événements a été supprimé
+        }
+    }
+
+    @FXML
+    private void handleAdd(ActionEvent event) {
+        // Ouvrir le formulaire d'ajout d'événement
+        System.out.println("Ouverture du formulaire d'ajout d'événement");
+    }
+
+    @FXML
+    private void handleRefresh(ActionEvent event) {
+        // Rafraîchir la liste des événements
+        loadEvents();
+    }
+
+    // Le bouton de recherche a été supprimé
+
+    @FXML
+    private void handleSearchKey(KeyEvent event) {
+        // Cette méthode est appelée à chaque frappe de clavier
+        // La recherche est déjà en temps réel, donc pas besoin de faire quoi que ce soit ici
+    }
+
+    private void setupSearch() {
+        // Ne rien faire si le champ de recherche n'est pas disponible
+        if (searchField == null) {
+            System.err.println("Champ de recherche non disponible");
+            return;
+        }
+
+        // Si la liste est vide, ne pas configurer la recherche
+        if (allEvents == null || allEvents.isEmpty()) {
+            System.out.println("Liste d'événements vide, recherche désactivée");
+            return;
+        }
+
+        try {
+            // Configurer l'écouteur pour le champ de recherche
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (filteredEvents != null) { // Vérifier que la liste filtrée existe toujours
+                    filteredEvents.setPredicate(event -> {
+                        // Si le champ de recherche est vide, afficher tous les événements
+                        if (newValue == null || newValue.isEmpty()) {
+                            return true;
+                        }
+
+                        // Convertir le texte de recherche en minuscules
+                        String lowerCaseFilter = newValue.toLowerCase();
+
+                        // Vérifier si le texte correspond à un attribut de l'événement
+                        if (event.getTitle().toLowerCase().contains(lowerCaseFilter)) {
+                            return true;
+                        } else if (event.getDescription() != null && event.getDescription().toLowerCase().contains(lowerCaseFilter)) {
+                            return true;
+                        } else if (event.getStatus().toLowerCase().contains(lowerCaseFilter)) {
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    // Mettre à jour la pagination
+                    int pageCount = (filteredEvents.size() / ITEMS_PER_PAGE) + (filteredEvents.size() % ITEMS_PER_PAGE > 0 ? 1 : 0);
+                    eventPagination.setPageCount(Math.max(1, pageCount));
+                    eventPagination.setCurrentPageIndex(0);
+
+                    // Mettre à jour la ListView
+                    updateListView(0);
+
+                    // Le compteur d'événements a été supprimé
+                }
+            });
+
+            System.out.println("Recherche en temps réel configurée avec succès");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la configuration de la recherche: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private Node createPage(int pageIndex) {
+        // Cette méthode est appelée par la pagination pour créer chaque page
+        updateListView(pageIndex);
+        return eventListView;
+    }
+
+    private void updateListView(int pageIndex) {
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, filteredEvents.size());
+
+        if (fromIndex > toIndex) {
+            eventListView.setItems(FXCollections.observableArrayList());
+            return;
+        }
+
+        // Créer une sous-liste pour la page actuelle
+        ObservableList<Event> pageItems = FXCollections.observableArrayList(
+            filteredEvents.subList(fromIndex, toIndex)
+        );
+
+        eventListView.setItems(pageItems);
+    }
+}

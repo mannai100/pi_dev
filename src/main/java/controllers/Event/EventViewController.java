@@ -20,6 +20,7 @@ import javafx.stage.Stage;
 import services.AuthService;
 import services.ReservationService;
 import services.RoleService;
+import controllers.ClientDashboardController;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,8 +44,7 @@ public class EventViewController implements Initializable {
     @FXML
     private Label dateFinLabel;
 
-    @FXML
-    private Label maxParticipantsLabel;
+    // Le champ maxParticipantsLabel a été supprimé
 
     @FXML
     private Label statusLabel;
@@ -97,7 +97,7 @@ public class EventViewController implements Initializable {
         dateDebutLabel.setText(dateFormat.format(event.getDate_debut()));
         dateFinLabel.setText(dateFormat.format(event.getDate_fin()));
 
-        maxParticipantsLabel.setText(String.valueOf(event.getMax_participants()));
+        // La ligne pour définir la valeur du label max_participants a été supprimée
         statusLabel.setText(event.getStatus());
 
         User user = event.getUser();
@@ -185,6 +185,9 @@ public class EventViewController implements Initializable {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Une erreur est survenue lors de la réservation");
                 return;
             }
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
 
             showAlert(Alert.AlertType.INFORMATION, "Succès", "Votre réservation a été enregistrée avec succès");
 

@@ -49,16 +49,15 @@ public class EventService {
             throw new IllegalArgumentException(EventValidator.formatErrors(errors));
         }
 
-        String query = "INSERT INTO event (user_id, title, description, date_debut, date_fin, max_participants, status, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO event (user_id, title, description, date_debut, date_fin, status, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, event.getUser().getId());
             statement.setString(2, event.getTitle());
             statement.setString(3, event.getDescription());
             statement.setTimestamp(4, new Timestamp(event.getDate_debut().getTime()));
             statement.setTimestamp(5, new Timestamp(event.getDate_fin().getTime()));
-            statement.setInt(6, event.getMax_participants());
-            statement.setString(7, event.getStatus());
-            statement.setString(8, event.getImage());
+            statement.setString(6, event.getStatus());
+            statement.setString(7, event.getImage());
 
             statement.executeUpdate();
 
@@ -89,16 +88,15 @@ public class EventService {
             throw new IllegalArgumentException("L'événement n'existe pas");
         }
 
-        String query = "UPDATE event SET title = ?, description = ?, date_debut = ?, date_fin = ?, max_participants = ?, status = ?, image = ? WHERE id = ?";
+        String query = "UPDATE event SET title = ?, description = ?, date_debut = ?, date_fin = ?, status = ?, image = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, event.getTitle());
             statement.setString(2, event.getDescription());
             statement.setTimestamp(3, new Timestamp(event.getDate_debut().getTime()));
             statement.setTimestamp(4, new Timestamp(event.getDate_fin().getTime()));
-            statement.setInt(5, event.getMax_participants());
-            statement.setString(6, event.getStatus());
-            statement.setString(7, event.getImage());
-            statement.setInt(8, event.getId());
+            statement.setString(5, event.getStatus());
+            statement.setString(6, event.getImage());
+            statement.setInt(7, event.getId());
 
             statement.executeUpdate();
         }
@@ -194,7 +192,7 @@ public class EventService {
         event.setDescription(resultSet.getString("description"));
         event.setDate_debut(resultSet.getTimestamp("date_debut"));
         event.setDate_fin(resultSet.getTimestamp("date_fin"));
-        event.setMax_participants(resultSet.getInt("max_participants"));
+        // Le champ max_participants a été supprimé
         event.setStatus(resultSet.getString("status"));
         event.setImage(resultSet.getString("image"));
 

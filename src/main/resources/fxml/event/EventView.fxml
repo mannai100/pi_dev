@@ -52,7 +52,7 @@
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <Label fx:id="statusLabel" text="actif" styleClass="status-active"/>
                     <Pane HBox.hgrow="ALWAYS" />
-                    <Label fx:id="maxParticipantsLabel" text="50 participants max." styleClass="event-info"/>
+                    <!-- Le label pour le nombre maximum de participants a été supprimé -->
                 </HBox>
 
                 <!-- Description -->

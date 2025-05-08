@@ -1,5 +1,7 @@
 package controllers;
 
+import entities.Event;
+import entities.ReserverEvent;
 import entities.User;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -19,6 +21,8 @@ import services.EventService;
 import services.ReservationService;
 import services.RoleService;
 
+import java.util.List;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -26,6 +30,9 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 public class ClientDashboardController implements Initializable {
+
+    // Instance statique pour permettre le rafraîchissement des statistiques depuis d'autres contrôleurs
+    private static ClientDashboardController instance;
 
     @FXML
     private Text userInfoText;
@@ -74,6 +81,9 @@ public class ClientDashboardController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Stocker l'instance pour permettre le rafraîchissement des statistiques
+        instance = this;
+
         // Afficher les informations de l'utilisateur connecté
         User currentUser = authService.getCurrentUser();
         if (currentUser != null) {
@@ -94,18 +104,56 @@ public class ClientDashboardController implements Initializable {
         initializeTables();
     }
 
+    /**
+     * Charge les statistiques (nombre d'événements disponibles et nombre de réservations)
+     * Méthode privée utilisée en interne
+     */
     private void loadStatistics() {
         try {
             // Compter le nombre d'événements disponibles
-            int availableEvents = 0; // À implémenter
+            List<Event> events = eventService.getAllEvents();
+            int availableEvents = 0;
+
+            // Compter uniquement les événements actifs
+            for (Event event : events) {
+                if (event.getStatus() != null && event.getStatus().equals("actif")) {
+                    availableEvents++;
+                }
+            }
+
             availableEventsText.setText(String.valueOf(availableEvents));
 
             // Compter le nombre de réservations de l'utilisateur
-            int myReservations = 0; // À implémenter
+            User currentUser = authService.getCurrentUser();
+            int myReservations = 0;
+
+            if (currentUser != null) {
+                List<ReserverEvent> reservations = reservationService.getReservationsByUser(currentUser.getId());
+                myReservations = reservations.size();
+            }
+
             myReservationsText.setText(String.valueOf(myReservations));
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des statistiques: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Rafraîchit les statistiques (nombre d'événements disponibles et nombre de réservations)
+     * Méthode publique pouvant être appelée depuis d'autres contrôleurs
+     */
+    public void refreshStatistics() {
+        loadStatistics();
+    }
+
+    /**
+     * Méthode statique pour rafraîchir les statistiques depuis n'importe quel contrôleur
+     * Cette méthode peut être appelée après l'ajout, la modification ou la suppression d'un événement
+     */
+    public static void refreshDashboardStatistics() {
+        if (instance != null) {
+            instance.refreshStatistics();
         }
     }
 

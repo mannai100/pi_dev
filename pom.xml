@@ -49,6 +49,13 @@
             <artifactId>javafx-swing</artifactId>
             <version>17.0.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.twilio.sdk</groupId>
+            <artifactId>twilio</artifactId>
+            <version>9.2.5</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import services.AuthService;
 import services.ReservationService;
 import services.RoleService;
+import controllers.ClientDashboardController;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -72,43 +73,43 @@ public class ReservationViewController implements Initializable {
 
     public void setReservation(ReserverEvent reservation) {
         this.reservation = reservation;
-        
+
         // Afficher les informations de l'événement
         Event event = reservation.getEvent();
         if (event != null) {
             eventTitleLabel.setText(event.getTitle());
             eventDescriptionLabel.setText(event.getDescription());
-            
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             eventDateDebutLabel.setText(dateFormat.format(event.getDate_debut()));
             eventDateFinLabel.setText(dateFormat.format(event.getDate_fin()));
         }
-        
+
         // Afficher les informations de l'utilisateur
         User user = reservation.getUser();
         if (user != null) {
             userNameLabel.setText(user.getPrenom() + " " + user.getNom());
             userEmailLabel.setText(user.getEmail());
         }
-        
+
         // Afficher les informations de la réservation
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         dateReservationLabel.setText(dateFormat.format(reservation.getDateReservation()));
         statutLabel.setText(reservation.getStatut());
-        
+
         // Configurer les boutons en fonction des droits de l'utilisateur
         try {
             User currentUser = authService.getCurrentUser();
             boolean isAdmin = roleService.isAdmin(currentUser);
-            boolean isOrganiser = event != null && 
-                    event.getUser() != null && 
-                    currentUser != null && 
+            boolean isOrganiser = event != null &&
+                    event.getUser() != null &&
+                    currentUser != null &&
                     event.getUser().getId() == currentUser.getId();
-            
+
             // Seuls l'admin et l'organisateur peuvent confirmer ou annuler
             boolean canManage = isAdmin || isOrganiser;
             confirmButton.setVisible(canManage && "en attente".equals(reservation.getStatut()));
-            cancelButton.setVisible(canManage || 
+            cancelButton.setVisible(canManage ||
                     (user != null && currentUser != null && user.getId() == currentUser.getId() && "en attente".equals(reservation.getStatut())));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -121,6 +122,10 @@ public class ReservationViewController implements Initializable {
             reservationService.updateReservationStatus(reservation.getId(), "confirmé");
             statutLabel.setText("confirmé");
             confirmButton.setVisible(false);
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
+
             showAlert(Alert.AlertType.INFORMATION, "Succès", "La réservation a été confirmée avec succès");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de la confirmation de la réservation: " + e.getMessage());
@@ -137,6 +142,10 @@ public class ReservationViewController implements Initializable {
             statutLabel.setText("annulé");
             confirmButton.setVisible(false);
             cancelButton.setVisible(false);
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
+
             showAlert(Alert.AlertType.INFORMATION, "Succès", "La réservation a été annulée avec succès");
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'annulation de la réservation: " + e.getMessage());

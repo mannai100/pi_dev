@@ -15,6 +15,7 @@ import services.AuthService;
 import services.EventService;
 import services.RoleService;
 import utils.EventValidator;
+import controllers.ClientDashboardController;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,8 +60,7 @@ public class EventEditController implements Initializable {
     @FXML
     private Spinner<Integer> minuteFinSpinner;
 
-    @FXML
-    private Spinner<Integer> maxParticipantsSpinner;
+    // Le champ maxParticipantsSpinner a été supprimé
 
     @FXML
     private ComboBox<String> statusComboBox;
@@ -109,9 +109,7 @@ public class EventEditController implements Initializable {
         SpinnerValueFactory<Integer> minuteFinValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
         minuteFinSpinner.setValueFactory(minuteFinValueFactory);
 
-        // Initialiser le spinner pour le nombre maximum de participants
-        SpinnerValueFactory<Integer> maxParticipantsValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 1000, 50);
-        maxParticipantsSpinner.setValueFactory(maxParticipantsValueFactory);
+        // L'initialisation du spinner pour le nombre maximum de participants a été supprimée
 
         // Initialiser le combobox pour le statut
         statusComboBox.getItems().addAll("actif", "annulé", "complet");
@@ -155,7 +153,7 @@ public class EventEditController implements Initializable {
         heureFinSpinner.getValueFactory().setValue(dateTimeFin.getHour());
         minuteFinSpinner.getValueFactory().setValue(dateTimeFin.getMinute());
 
-        maxParticipantsSpinner.getValueFactory().setValue(event.getMax_participants());
+        // La ligne pour définir la valeur du spinner max_participants a été supprimée
         statusComboBox.setValue(event.getStatus());
         // Enregistrer le chemin de l'image actuelle
         currentImagePath = event.getImage();
@@ -192,7 +190,7 @@ public class EventEditController implements Initializable {
                 dateFinPicker.setDisable(true);
                 heureFinSpinner.setDisable(true);
                 minuteFinSpinner.setDisable(true);
-                maxParticipantsSpinner.setDisable(true);
+                // La ligne pour désactiver le spinner max_participants a été supprimée
                 statusComboBox.setDisable(true);
                 browseButton.setDisable(true);
                 saveButton.setDisable(true);
@@ -277,15 +275,7 @@ public class EventEditController implements Initializable {
             return;
         }
 
-        /**
-
-        int maxParticipants = maxParticipantsSpinner.getValue();
-        String maxParticipantsError = EventValidator.isValidMaxParticipants(maxParticipants);
-        if (maxParticipantsError != null) {
-            showAlert(Alert.AlertType.ERROR, "Erreur de validation", "- " + maxParticipantsError);
-            return;
-        }
-         */
+        // La validation du nombre maximum de participants a été supprimée
 
         String status = statusComboBox.getValue();
         String statusError = EventValidator.isValidStatus(status);
@@ -322,6 +312,9 @@ public class EventEditController implements Initializable {
 
             // Enregistrer les modifications
             eventService.updateEvent(event);
+
+            // Rafraîchir les statistiques du tableau de bord
+            ClientDashboardController.refreshDashboardStatistics();
 
             // Fermer la fenêtre
             showAlert(Alert.AlertType.INFORMATION, "Succès", "L'événement a été modifié avec succès");
