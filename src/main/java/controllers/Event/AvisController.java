@@ -111,10 +111,15 @@ public class AvisController implements Initializable {
     }
 
     private HBox createAvisBox(Avis avis) {
-        HBox avisBox = new HBox(10);
+        HBox avisBox = new HBox(15); // Augmenter l'espacement entre les éléments
         avisBox.setStyle("-fx-padding: 10; -fx-border-color: #dddddd; -fx-border-radius: 5; -fx-background-color: #f9f9f9; -fx-background-radius: 5;");
+        avisBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT); // Aligner les éléments à gauche et au centre verticalement
 
+        // Créer une boîte pour les informations qui prendra la majorité de l'espace
         VBox infoBox = new VBox(5);
+        infoBox.setPrefWidth(400); // Définir une largeur préférée pour la boîte d'info
+        infoBox.setMaxWidth(Double.MAX_VALUE); // Permettre à la boîte d'info de s'étendre
+        javafx.scene.layout.HBox.setHgrow(infoBox, javafx.scene.layout.Priority.ALWAYS); // Permettre à la boîte d'info de s'étendre
 
         // Nom de l'utilisateur et date
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -130,17 +135,23 @@ public class AvisController implements Initializable {
         commentaireLabel.setWrapText(true);
 
         infoBox.getChildren().addAll(userLabel, noteLabel, commentaireLabel);
+        avisBox.getChildren().add(infoBox);
 
         // Bouton de suppression (visible uniquement pour l'auteur ou l'admin)
         User currentUser = authService.getCurrentUser();
         if (currentUser != null && (currentUser.getId() == avis.getUser().getId() || currentUser.getRole().contains("ADMIN"))) {
+            // Créer un bouton avec une largeur fixe suffisante pour afficher le texte
             Button deleteButton = new Button("Supprimer");
-            deleteButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+            deleteButton.setMinWidth(120); // Largeur minimale pour afficher le texte complet
+            deleteButton.setPrefWidth(120); // Largeur préférée pour le bouton
+            deleteButton.setMaxHeight(30); // Hauteur maximale pour le bouton
+
+            // Style du bouton avec padding suffisant
+            deleteButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 5;");
             deleteButton.setOnAction(e -> deleteAvis(avis.getId()));
 
-            avisBox.getChildren().addAll(infoBox, deleteButton);
-        } else {
-            avisBox.getChildren().add(infoBox);
+            // Ajouter le bouton directement à la HBox principale
+            avisBox.getChildren().add(deleteButton);
         }
 
         return avisBox;
