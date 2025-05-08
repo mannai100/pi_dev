@@ -349,6 +349,9 @@ public class EventListController implements Initializable {
 
                         // Rafraîchir la liste des événements
                         loadEvents();
+
+                        // Rafraîchir les statistiques du tableau de bord client
+                        controllers.ClientDashboardController.refreshDashboardStatistics();
                     } catch (Exception ex) {
                         System.err.println("Erreur lors de l'approbation de l'événement: " + ex.getMessage());
                         ex.printStackTrace();
@@ -389,6 +392,9 @@ public class EventListController implements Initializable {
 
                         // Rafraîchir la liste des événements
                         loadEvents();
+
+                        // Rafraîchir les statistiques du tableau de bord client
+                        controllers.ClientDashboardController.refreshDashboardStatistics();
                     } catch (Exception ex) {
                         System.err.println("Erreur lors du rejet de l'événement: " + ex.getMessage());
                         ex.printStackTrace();

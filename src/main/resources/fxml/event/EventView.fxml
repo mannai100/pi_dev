@@ -94,6 +94,7 @@
                 <Insets top="15" right="20" bottom="15" left="20"/>
             </padding>
 
+            <Button fx:id="avisButton" text="Avis" onAction="#handleAvis" styleClass="button-info"/>
             <Button fx:id="reserveButton" text="Réserver" onAction="#handleReserve" styleClass="button-success"/>
             <Button fx:id="editButton" text="Modifier" onAction="#handleEdit" styleClass="button-warning"/>
             <Button fx:id="closeButton" text="Fermer" onAction="#handleClose" defaultButton="true" styleClass="button"/>

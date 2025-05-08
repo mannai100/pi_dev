@@ -29,6 +29,8 @@ import services.EventService;
 import services.ReservationService;
 import services.RoleService;
 import controllers.ClientDashboardController;
+import javafx.stage.Modality;
+import controllers.Event.AvisController;
 
 import java.io.File;
 import java.io.IOException;
@@ -617,6 +619,14 @@ public class EventListController implements Initializable {
                     currentUser != null &&
                     event.getUser().getId() == currentUser.getId();
 
+            // Bouton Avis (pour tous les utilisateurs)
+            Button avisBtn = new Button("Avis");
+            avisBtn.setPrefWidth(80);
+            avisBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;");
+            avisBtn.setOnAction(e -> handleAvisEvent(e));
+            avisBtn.setUserData(event); // Stocker l'événement dans le bouton
+            buttonBox.getChildren().add(avisBtn);
+
             // Bouton Réserver (pour tous les utilisateurs sauf l'organisateur)
             if (!(isOrganiser)) {
                 Button reserveBtn = new Button("Réserver");
@@ -858,5 +868,62 @@ public class EventListController implements Initializable {
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    /**
+     * Gérer le clic sur le bouton "Avis"
+     */
+    @FXML
+    public void handleAvisEvent(ActionEvent event) {
+        // Récupérer l'événement associé au bouton
+        Button button = (Button) event.getSource();
+        Event selectedEvent = (Event) button.getUserData();
+
+        if (selectedEvent != null) {
+            showAvis(selectedEvent);
+        }
+    }
+
+    /**
+     * Afficher les avis pour un événement
+     */
+    private void showAvis(Event event) {
+        try {
+            // Charger la vue des avis
+            File file = new File("src/main/resources/fxml/event/AvisView.fxml");
+            if (file.exists()) {
+                URL url = file.toURI().toURL();
+                FXMLLoader loader = new FXMLLoader(url);
+                Parent root = loader.load();
+
+                // Récupérer le contrôleur
+                AvisController controller = loader.getController();
+
+                // Passer l'événement au contrôleur
+                controller.setEvent(event);
+
+                // Créer une nouvelle scène
+                Scene scene = new Scene(root);
+
+                // Créer une nouvelle fenêtre
+                Stage stage = new Stage();
+                stage.setTitle("Avis - " + event.getTitle());
+                stage.setScene(scene);
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initOwner(eventsContainer.getScene().getWindow());
+
+                // Afficher la fenêtre
+                stage.showAndWait();
+
+                // Recharger les événements après la fermeture de la fenêtre
+                // pour refléter les changements éventuels
+                loadEvents();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Fichier FXML non trouvé", file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement de la vue des avis", e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

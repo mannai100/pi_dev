@@ -114,9 +114,10 @@ public class ClientDashboardController implements Initializable {
             List<Event> events = eventService.getAllEvents();
             int availableEvents = 0;
 
-            // Compter uniquement les événements actifs
+            // Compter les événements actifs et acceptés
             for (Event event : events) {
-                if (event.getStatus() != null && event.getStatus().equals("actif")) {
+                if (event.getStatus() != null &&
+                    (event.getStatus().equals("actif") || event.getStatus().equals("accepté"))) {
                     availableEvents++;
                 }
             }

@@ -16,6 +16,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import services.AuthService;
 import services.ReservationService;
@@ -69,6 +70,9 @@ public class EventViewController implements Initializable {
 
     @FXML
     private Button closeButton;
+
+    @FXML
+    private Button avisButton;
 
     private Event event;
     private AuthService authService;
@@ -268,6 +272,37 @@ public class EventViewController implements Initializable {
                 return "status-completed";
             default:
                 return "status-pending";
+        }
+    }
+
+    @FXML
+    public void handleAvis() {
+        try {
+            // Charger la vue des avis
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event/AvisView.fxml"));
+            Parent root = loader.load();
+            
+            // Récupérer le contrôleur
+            AvisController controller = loader.getController();
+            
+            // Passer l'événement au contrôleur
+            controller.setEvent(event);
+            
+            // Créer une nouvelle scène
+            Scene scene = new Scene(root);
+            
+            // Créer une nouvelle fenêtre
+            Stage stage = new Stage();
+            stage.setTitle("Avis - " + event.getTitle());
+            stage.setScene(scene);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(avisButton.getScene().getWindow());
+            
+            // Afficher la fenêtre
+            stage.showAndWait();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement de la vue des avis: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
