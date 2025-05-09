@@ -34,11 +34,17 @@ public class AvisService {
      * @param avis L'avis à ajouter
      * @return true si l'avis a été ajouté avec succès, false sinon
      * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'utilisateur a déjà donné un avis ou est l'organisateur de l'événement
      */
-    public boolean addAvis(Avis avis) throws SQLException {
+    public boolean addAvis(Avis avis) throws SQLException, IllegalArgumentException {
         // Vérifier si l'utilisateur a déjà donné un avis pour cet événement
         if (hasUserRatedEvent(avis.getUser().getId(), avis.getEvent().getId())) {
             throw new IllegalArgumentException("Vous avez déjà donné un avis pour cet événement");
+        }
+        
+        // Vérifier si l'utilisateur est l'organisateur de l'événement
+        if (avis.getEvent().getUser() != null && avis.getEvent().getUser().getId() == avis.getUser().getId()) {
+            throw new IllegalArgumentException("Vous ne pouvez pas évaluer votre propre événement");
         }
 
         String query = "INSERT INTO avis (note, commentaire, date_avis, user_id, event_id) VALUES (?, ?, ?, ?, ?)";

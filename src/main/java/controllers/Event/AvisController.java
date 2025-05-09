@@ -169,6 +169,15 @@ public class AvisController implements Initializable {
                 return;
             }
 
+            // Vérifier si l'utilisateur est l'organisateur de l'événement
+            if (event.getUser() != null && event.getUser().getId() == currentUser.getId()) {
+                noteSlider.setDisable(true);
+                commentaireArea.setDisable(true);
+                submitButton.setDisable(true);
+                submitButton.setText("Vous ne pouvez pas évaluer votre propre événement");
+                return;
+            }
+
             // Vérifier si l'utilisateur a déjà donné un avis
             boolean hasRated = avisService.hasUserRatedEvent(currentUser.getId(), event.getId());
             if (hasRated) {
@@ -188,6 +197,12 @@ public class AvisController implements Initializable {
             User currentUser = authService.getCurrentUser();
             if (currentUser == null) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Vous devez être connecté pour donner un avis");
+                return;
+            }
+
+            // Vérifier si l'utilisateur est l'organisateur de l'événement
+            if (this.event.getUser() != null && this.event.getUser().getId() == currentUser.getId()) {
+                showAlert(Alert.AlertType.ERROR, "Erreur", "Vous ne pouvez pas évaluer votre propre événement");
                 return;
             }
 
