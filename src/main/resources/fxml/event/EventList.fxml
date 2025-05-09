@@ -5,8 +5,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.shape.Circle?>
-
 <?import javafx.scene.image.ImageView?>
+
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.Event.EventListController"
@@ -19,9 +19,23 @@
             <HBox styleClass="header" alignment="CENTER_LEFT">
                 <VBox>
                     <Text text="Événements" styleClass="header-title"/>
-                    <Text text="Découvrez et réservez des événements passionnants" styleClass="header-subtitle"/>
+                    <Text text="Découvrez et Reservez des événements passionnants" styleClass="header-subtitle"/>
                 </VBox>
             </HBox>
+            
+            <!-- Notification sur les jours fériés -->
+            <VBox fx:id="holidayNoticeBox" styleClass="holiday-notice" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label styleClass="holiday-icon" text="📅"/>
+                    <VBox spacing="3">
+                        <Label text="Information importante" styleClass="holiday-title"/>
+                        <Text text="La validation des événements par l'administrateur ne sera pas prise en compte pendant les weekends et les jours fériés." 
+                              styleClass="holiday-text" wrappingWidth="700"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS" />
+                    <Button fx:id="showHolidaysBtn" text="Voir les jours fériés" styleClass="holiday-button" onAction="#handleShowHolidays"/>
+                </HBox>
+            </VBox>
 
             <!-- Barre de recherche -->
             <HBox styleClass="search-bar" alignment="CENTER_LEFT" spacing="15">
@@ -32,8 +46,6 @@
                 <Button text="Rafraîchir" onAction="#handleRefresh" styleClass="button"/>
                 <Button text="Effacer les filtres" onAction="#handleClearFilters" styleClass="button"/>
             </HBox>
-
-
         </VBox>
     </top>
 
@@ -45,7 +57,6 @@
                         <padding>
                             <Insets top="10" right="10" bottom="10" left="10"/>
                         </padding>
-
                     </VBox>
                 </ScrollPane>
             </center>
@@ -68,5 +79,4 @@
             <Text fx:id="totalEventsText" text="Total: 0 événement(s)" styleClass="footer-text"/>
         </HBox>
     </bottom>
-
 </BorderPane>

@@ -41,6 +41,18 @@ import services.RoleService;
 import controllers.ClientDashboardController;
 import javafx.stage.Modality;
 import controllers.Event.AvisController;
+import services.HolidayService;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,16 +78,24 @@ public class EventListController implements Initializable {
     @FXML
     private Text totalEventsText;
 
+    @FXML
+    private VBox holidayNoticeBox;
+
+    @FXML
+    private Button showHolidaysBtn;
+
     private EventService eventService;
     private AuthService authService;
     private RoleService roleService;
     private ObservableList<Event> eventList;
+    private HolidayService holidayService;
 
     public EventListController() {
         eventService = EventService.getInstance();
         authService = AuthService.getInstance();
         roleService = RoleService.getInstance();
         eventList = FXCollections.observableArrayList();
+        holidayService = HolidayService.getInstance();
     }
 
     @Override
@@ -87,7 +107,10 @@ public class EventListController implements Initializable {
 
         // Configurer le champ de recherche
         searchField.textProperty().addListener((observable, oldValue, newValue) -> filterEvents());
-
+        
+        // Afficher la notification des jours fériés
+        holidayNoticeBox.setVisible(true);
+        
         // Charger les événements
         loadEvents();
     }
@@ -1176,6 +1199,93 @@ public class EventListController implements Initializable {
             }
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement de la vue des avis", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Affiche une boîte de dialogue avec la liste des jours fériés
+     */
+    @FXML
+    public void handleShowHolidays() {
+        try {
+            // Créer une boîte de dialogue
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Jours fériés");
+            dialog.setHeaderText("Liste des jours fériés à venir");
+            
+            // Personnaliser le style de la boîte de dialogue
+            DialogPane dialogPane = dialog.getDialogPane();
+            dialogPane.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            dialogPane.getStyleClass().add("holiday-dialog");
+            
+            // Créer le contenu de la boîte de dialogue
+            VBox content = new VBox(15);
+            content.getStyleClass().add("holiday-list");
+            
+            // Ajouter un texte explicatif
+            TextFlow explanation = new TextFlow();
+            Text explText = new Text("La validation des événements ne sera pas traitée pendant les weekends et les jours fériés suivants :");
+            explText.getStyleClass().add("holiday-text");
+            explanation.getChildren().add(explText);
+            content.getChildren().add(explanation);
+            
+            // Récupérer la liste des jours fériés
+            List<String> holidays = holidayService.getHolidays();
+
+            // Créer un conteneur défilable pour les jours fériés
+            VBox holidayItems = new VBox(5);
+            holidayItems.getStyleClass().add("holiday-items");
+
+            // Ajouter chaque jour férié à la liste
+            for (String holiday : holidays) {
+                HBox item = new HBox(10);
+                item.getStyleClass().add("holiday-item");
+
+                // Séparer le nom et la date
+                String[] parts = holiday.split(" : ");
+                if (parts.length == 2) {
+                    Label nameLabel = new Label(parts[0]);
+                    nameLabel.getStyleClass().add("holiday-name");
+
+                    Label dateLabel = new Label(parts[1]);
+                    dateLabel.getStyleClass().add("holiday-date");
+
+                    item.getChildren().addAll(dateLabel, nameLabel);
+                    holidayItems.getChildren().add(item);
+                }
+            }
+
+            // Ajouter une note sur les weekends
+            HBox weekendItem = new HBox(10);
+            weekendItem.getStyleClass().add("holiday-item");
+
+            Label weekendLabel = new Label("Tous les samedis et dimanches");
+            weekendLabel.getStyleClass().add("holiday-name");
+            weekendLabel.setStyle("-fx-font-style: italic;");
+
+            weekendItem.getChildren().add(weekendLabel);
+            holidayItems.getChildren().add(weekendItem);
+
+            // Créer un ScrollPane pour permettre le défilement si la liste est longue
+            ScrollPane scrollPane = new ScrollPane(holidayItems);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setPrefHeight(300);
+            scrollPane.getStyleClass().add("holiday-scroll");
+
+            content.getChildren().add(scrollPane);
+
+            // Définir le contenu de la boîte de dialogue
+            dialogPane.setContent(content);
+
+            // Ajouter un bouton de fermeture
+            dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+
+            // Afficher la boîte de dialogue
+            dialog.showAndWait();
+            
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des jours fériés", e.getMessage());
             e.printStackTrace();
         }
     }

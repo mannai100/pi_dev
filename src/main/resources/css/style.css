@@ -267,3 +267,74 @@
     -fx-background-color: #2980b9;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 15, 0, 0, 7);
 }
+
+/* Styles pour la notification des jours fériés */
+.holiday-notice {
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 8px;
+    -fx-border-color: #e9ecef;
+    -fx-border-radius: 8px;
+    -fx-padding: 12px;
+    -fx-margin: 0 0 15px 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);
+}
+
+.holiday-icon {
+    -fx-font-size: 24px;
+    -fx-text-fill: #3498db;
+}
+
+.holiday-title {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2c3e50;
+}
+
+.holiday-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #7f8c8d;
+}
+
+.holiday-button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 6px 12px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.holiday-button:hover {
+    -fx-background-color: #2980b9;
+}
+
+/* Style pour la liste des jours fériés */
+.holiday-list {
+    -fx-background-color: white;
+    -fx-background-radius: 8px;
+    -fx-border-color: #e9ecef;
+    -fx-border-radius: 8px;
+    -fx-padding: 15px;
+}
+
+.holiday-list-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 0 0 10px 0;
+}
+
+.holiday-item {
+    -fx-padding: 8px 0;
+    -fx-border-color: transparent transparent #f0f0f0 transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.holiday-date {
+    -fx-font-weight: bold;
+    -fx-text-fill: #3498db;
+}
+
+.holiday-name {
+    -fx-text-fill: #2c3e50;
+}

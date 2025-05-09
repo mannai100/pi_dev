@@ -367,7 +367,7 @@ public class EventListController implements Initializable {
                         statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
 
                         // Masquer les boutons d'approbation et de rejet
-                        buttonBox.getChildren().removeAll(approveButton, git addrejectButton);
+                        buttonBox.getChildren().removeAll(approveButton, rejectButton);
 
                         // Afficher un message de succès
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);

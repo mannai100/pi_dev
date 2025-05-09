@@ -7,6 +7,7 @@ module org.example.workshopjdbc {
     requires javafx.base;
     requires java.sql;
     requires twilio;
+    requires org.json;
 
 
     opens tests to javafx.fxml, javafx.graphics, javafx.base;
