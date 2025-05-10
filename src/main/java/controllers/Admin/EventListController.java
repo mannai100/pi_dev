@@ -28,7 +28,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.Region;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.geometry.Insets;
@@ -98,7 +97,7 @@ public class EventListController implements Initializable {
                             // Dates de l'événement
                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                             String dateInfo = "Du " + dateFormat.format(event.getDate_debut()) +
-                                             " au " + dateFormat.format(event.getDate_fin());
+                                    " au " + dateFormat.format(event.getDate_fin());
                             Label dateLabel = new Label(dateInfo);
                             dateLabel.setStyle("-fx-font-size: 12px;");
 
@@ -166,24 +165,9 @@ public class EventListController implements Initializable {
 
             // Dates de l'événement
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy HH:mm");
-
-            // Créer un conteneur vertical pour les dates
-            VBox datesContainer = new VBox(5);
-
-            // Date de début
-            Label dateDebutTitle = new Label("Date de début:");
-            dateDebutTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-            Label dateDebutLabel = new Label(dateFormat.format(event.getDate_debut()));
-            dateDebutLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
-
-            // Date de fin
-            Label dateFinTitle = new Label("Date de fin:");
-            dateFinTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-            Label dateFinLabel = new Label(dateFormat.format(event.getDate_fin()));
-            dateFinLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
-
-            // Ajouter les labels au conteneur de dates
-            datesContainer.getChildren().addAll(dateDebutTitle, dateDebutLabel, dateFinTitle, dateFinLabel);
+            String dateInfo = "Du " + dateFormat.format(event.getDate_debut()) + "\nau " + dateFormat.format(event.getDate_fin());
+            Label dateLabel = new Label(dateInfo);
+            dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
 
             // Statut de l'événement
             Label statusLabel = new Label("Statut: " + event.getStatus());
@@ -218,12 +202,12 @@ public class EventListController implements Initializable {
 
             // Ajouter tous les éléments au conteneur d'informations
             infoContainer.getChildren().addAll(
-                titleLabel,
-                datesContainer,
-                statusLabel,
-                sep1,
-                descriptionTitle,
-                descriptionLabel
+                    titleLabel,
+                    dateLabel,
+                    statusLabel,
+                    sep1,
+                    descriptionTitle,
+                    descriptionLabel
             );
 
             // Essayer de charger l'image de l'événement
@@ -233,15 +217,15 @@ public class EventListController implements Initializable {
             imageView.setPreserveRatio(true);
 
             // Utiliser une image par défaut générée programmatiquement
-            Rectangle placeholder = new Rectangle(780, 400);
+            Rectangle placeholder = new Rectangle(300, 200);
             placeholder.setFill(Color.web("#3498db"));
 
             // Créer un texte pour l'image par défaut
             Text placeholderText = new Text(event.getTitle());
             placeholderText.setFill(Color.WHITE);
-            placeholderText.setFont(Font.font("System", FontWeight.BOLD, 24));
+            placeholderText.setFont(Font.font("System", FontWeight.BOLD, 18));
             placeholderText.setTextAlignment(TextAlignment.CENTER);
-            placeholderText.setWrappingWidth(760);
+            placeholderText.setWrappingWidth(280);
 
             // Créer un StackPane pour combiner le rectangle et le texte
             StackPane placeholderImage = new StackPane(placeholder, placeholderText);
@@ -301,18 +285,9 @@ public class EventListController implements Initializable {
             VBox imageContainer = new VBox();
             imageContainer.setStyle("-fx-border-color: #bdc3c7; -fx-border-width: 1px; -fx-padding: 10px; -fx-background-color: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
             imageContainer.setAlignment(Pos.CENTER);
-            // Permettre au conteneur d'image de s'étendre sur toute la largeur
-            imageContainer.setMinWidth(800);
-            imageContainer.setPrefWidth(Region.USE_COMPUTED_SIZE);
-            imageContainer.setMaxWidth(Double.MAX_VALUE);
+            imageContainer.setMinWidth(320);
+            imageContainer.setMaxWidth(320);
             imageContainer.setPadding(new Insets(10));
-
-            // Modifier les dimensions de l'image pour l'afficher verticalement sur toute la largeur
-            if (imageView != null) {
-                imageView.setFitWidth(780); // Presque toute la largeur du conteneur
-                imageView.setFitHeight(400); // Hauteur plus importante
-                imageView.setPreserveRatio(true);
-            }
 
             // Ajouter soit l'image chargée, soit l'image par défaut générée
             if (imageView != null && imageView.getImage() != null) {
@@ -321,13 +296,9 @@ public class EventListController implements Initializable {
                 imageContainer.getChildren().add(placeholderImage);
             }
 
-            // Créer un conteneur principal vertical pour organiser l'affichage
-            VBox mainContainer = new VBox(30); // Augmenter l'espacement entre l'image et les informations
-            mainContainer.getChildren().addAll(imageContainer, infoContainer);
-            mainContainer.setPadding(new Insets(0, 0, 20, 0)); // Ajouter un peu d'espace en bas
-
-            // Ajouter le conteneur principal au centre
-            root.setCenter(mainContainer);
+            // Ajouter l'image à gauche et les informations à droite
+            root.setLeft(imageContainer);
+            root.setCenter(infoContainer);
 
             // Boutons d'action en bas
             HBox buttonBox = new HBox(10);
@@ -378,9 +349,6 @@ public class EventListController implements Initializable {
 
                         // Rafraîchir la liste des événements
                         loadEvents();
-
-                        // Rafraîchir les statistiques du tableau de bord client
-                        controllers.ClientDashboardController.refreshDashboardStatistics();
                     } catch (Exception ex) {
                         System.err.println("Erreur lors de l'approbation de l'événement: " + ex.getMessage());
                         ex.printStackTrace();
@@ -421,9 +389,6 @@ public class EventListController implements Initializable {
 
                         // Rafraîchir la liste des événements
                         loadEvents();
-
-                        // Rafraîchir les statistiques du tableau de bord client
-                        controllers.ClientDashboardController.refreshDashboardStatistics();
                     } catch (Exception ex) {
                         System.err.println("Erreur lors du rejet de l'événement: " + ex.getMessage());
                         ex.printStackTrace();
@@ -445,16 +410,17 @@ public class EventListController implements Initializable {
                 buttonBox.getChildren().addAll(approveButton, rejectButton);
             }
 
-            // Ajouter les boutons en bas
-            root.setBottom(buttonBox);
+            // Ajouter le bouton en bas
+            VBox centerContainer = new VBox(infoContainer, buttonBox);
+            root.setCenter(centerContainer);
 
             // Configurer et afficher la fenêtre
-            Scene scene = new Scene(root, 900, 800); // Augmenter la hauteur pour accommoder l'image plus grande
+            Scene scene = new Scene(root, 900, 650);
             scene.getStylesheets().add(getClass().getResource("/styles/admin-styles.css").toExternalForm());
 
             detailStage.setScene(scene);
             detailStage.setMinWidth(900);
-            detailStage.setMinHeight(800); // Augmenter la hauteur minimale
+            detailStage.setMinHeight(650);
             detailStage.show();
 
             // Centrer la fenêtre sur l'écran
@@ -665,7 +631,7 @@ public class EventListController implements Initializable {
 
         // Créer une sous-liste pour la page actuelle
         ObservableList<Event> pageItems = FXCollections.observableArrayList(
-            filteredEvents.subList(fromIndex, toIndex)
+                filteredEvents.subList(fromIndex, toIndex)
         );
 
         eventListView.setItems(pageItems);

@@ -12,7 +12,6 @@ public class Event {
     private String description;
     private Date date_debut;
     private Date date_fin;
-    // Le champ max_participants a été supprimé
     private String status;
     private String image;
 
