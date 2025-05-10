@@ -101,16 +101,16 @@ public class EventListController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Initialiser le filtre de statut avec seulement les statuts pertinents pour le client
-        statusFilter.getItems().addAll("Tous", "actif", "accepté");
+        statusFilter.getItems().addAll("Tous", "accepté", "en attente", "rejeté");
         statusFilter.setValue("Tous");
         statusFilter.setOnAction(event -> filterEvents());
 
         // Configurer le champ de recherche
         searchField.textProperty().addListener((observable, oldValue, newValue) -> filterEvents());
-        
+
         // Afficher la notification des jours fériés
         holidayNoticeBox.setVisible(true);
-        
+
         // Charger les événements
         loadEvents();
     }
@@ -493,10 +493,10 @@ public class EventListController implements Initializable {
                                    event.getUser().getId() == currentUser.getId();
 
                 // Afficher l'événement si:
-                // 1. Il est actif ou accepté (pour tous les utilisateurs)
+                // 1. Il est accepté (pour tous les utilisateurs)
                 // 2. OU l'utilisateur est admin (voit tout)
                 // 3. OU l'utilisateur est le créateur de l'événement
-                if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus()) || isAdmin || isCreator) {
+                if ("accepté".equals(event.getStatus()) || isAdmin || isCreator) {
                     // Créer un conteneur pour l'événement
                     HBox eventCard = createEventCard(event);
                     eventsContainer.getChildren().add(eventCard);
@@ -544,9 +544,9 @@ public class EventListController implements Initializable {
 
                 // Afficher l'événement si:
                 // 1. Il correspond aux critères de recherche et de statut
-                // 2. ET (il est actif ou accepté OU l'utilisateur est admin OU l'utilisateur est le créateur)
+                // 2. ET (il est accepté OU l'utilisateur est admin OU l'utilisateur est le créateur)
                 if (matchesSearch && matchesStatus &&
-                    ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus()) || isAdmin || isCreator)) {
+                    ("accepté".equals(event.getStatus()) || isAdmin || isCreator)) {
                     // Créer un conteneur pour l'événement
                     HBox eventCard = createEventCard(event);
                     eventsContainer.getChildren().add(eventCard);
@@ -813,18 +813,12 @@ public class EventListController implements Initializable {
         }
 
         switch (status) {
-            case "actif":
-                return "status-active";
             case "accepté":
-                return "status-active"; // Utiliser le même style que "actif"
-            case "annulé":
+                return "status-active";
+            case "rejeté":
                 return "status-cancelled";
-            case "complet":
-                return "status-completed";
             case "en attente":
                 return "status-pending";
-            case "rejeté":
-                return "status-cancelled"; // Utiliser le même style que "annulé"
             default:
                 return "status-pending";
         }
@@ -844,7 +838,7 @@ public class EventListController implements Initializable {
             }
 
             // Vérifier si l'événement est disponible
-            if (!"actif".equals(event.getStatus()) && !"accepté".equals(event.getStatus())) {
+            if (!"accepté".equals(event.getStatus())) {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Événement non disponible", "Cet événement n'est pas disponible pour réservation");
                 return;
             }
@@ -991,12 +985,10 @@ public class EventListController implements Initializable {
 
             // Statut de l'événement
             Label statusLabel = new Label("Statut: " + event.getStatus());
-            if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus())) {
+            if ("accepté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("annulé".equals(event.getStatus()) || "rejeté".equals(event.getStatus())) {
+            } else if ("rejeté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("complet".equals(event.getStatus())) {
-                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold; -fx-font-size: 14px;");
             } else if ("en attente".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold; -fx-font-size: 14px;");
             }
@@ -1213,23 +1205,23 @@ public class EventListController implements Initializable {
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setTitle("Jours fériés");
             dialog.setHeaderText("Liste des jours fériés à venir");
-            
+
             // Personnaliser le style de la boîte de dialogue
             DialogPane dialogPane = dialog.getDialogPane();
             dialogPane.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
             dialogPane.getStyleClass().add("holiday-dialog");
-            
+
             // Créer le contenu de la boîte de dialogue
             VBox content = new VBox(15);
             content.getStyleClass().add("holiday-list");
-            
+
             // Ajouter un texte explicatif
             TextFlow explanation = new TextFlow();
             Text explText = new Text("La validation des événements ne sera pas traitée pendant les weekends et les jours fériés suivants :");
             explText.getStyleClass().add("holiday-text");
             explanation.getChildren().add(explText);
             content.getChildren().add(explanation);
-            
+
             // Récupérer la liste des jours fériés
             List<String> holidays = holidayService.getHolidays();
 
@@ -1283,7 +1275,7 @@ public class EventListController implements Initializable {
 
             // Afficher la boîte de dialogue
             dialog.showAndWait();
-            
+
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement des jours fériés", e.getMessage());
             e.printStackTrace();

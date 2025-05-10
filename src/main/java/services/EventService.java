@@ -23,9 +23,6 @@ public class EventService {
     public static final String STATUS_PENDING = "en attente";
     public static final String STATUS_APPROVED = "accepté";
     public static final String STATUS_REJECTED = "rejeté";
-    public static final String STATUS_ACTIVE = "actif";
-    public static final String STATUS_CANCELLED = "annulé";
-    public static final String STATUS_COMPLETED = "complet";
 
     /**
      * Constructeur privé pour le pattern Singleton
@@ -166,10 +163,7 @@ public class EventService {
         return status != null && (
             status.equals(STATUS_PENDING) ||
             status.equals(STATUS_APPROVED) ||
-            status.equals(STATUS_REJECTED) ||
-            status.equals(STATUS_ACTIVE) ||
-            status.equals(STATUS_CANCELLED) ||
-            status.equals(STATUS_COMPLETED)
+            status.equals(STATUS_REJECTED)
         );
     }
 

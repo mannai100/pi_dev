@@ -264,12 +264,12 @@ public class EventViewController implements Initializable {
         }
 
         switch (status) {
-            case "actif":
+            case "accepté":
                 return "status-active";
-            case "annulé":
+            case "rejeté":
                 return "status-cancelled";
-            case "complet":
-                return "status-completed";
+            case "en attente":
+                return "status-pending";
             default:
                 return "status-pending";
         }
@@ -281,23 +281,23 @@ public class EventViewController implements Initializable {
             // Charger la vue des avis
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/event/AvisView.fxml"));
             Parent root = loader.load();
-            
+
             // Récupérer le contrôleur
             AvisController controller = loader.getController();
-            
+
             // Passer l'événement au contrôleur
             controller.setEvent(event);
-            
+
             // Créer une nouvelle scène
             Scene scene = new Scene(root);
-            
+
             // Créer une nouvelle fenêtre
             Stage stage = new Stage();
             stage.setTitle("Avis - " + event.getTitle());
             stage.setScene(scene);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initOwner(avisButton.getScene().getWindow());
-            
+
             // Afficher la fenêtre
             stage.showAndWait();
         } catch (IOException e) {

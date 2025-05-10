@@ -23,9 +23,6 @@ public class EventService {
     public static final String STATUS_PENDING = "en attente";
     public static final String STATUS_APPROVED = "accepté";
     public static final String STATUS_REJECTED = "rejeté";
-    public static final String STATUS_ACTIVE = "actif";
-    public static final String STATUS_CANCELLED = "annulé";
-    public static final String STATUS_COMPLETED = "complet";
 
     /**
      * Constructeur privé pour le pattern Singleton
@@ -120,22 +117,22 @@ public class EventService {
     }
 
     /**
-     * Met à jour le statut d'un événement
-     * @param eventId L'identifiant de l'événement
+     * Mettre à jour le statut d'un événement
+     * @param eventId L'ID de l'événement
      * @param status Le nouveau statut
      * @throws SQLException En cas d'erreur SQL
-     * @throws IllegalArgumentException Si le statut est invalide
+     * @throws IllegalArgumentException Si l'événement n'existe pas
      */
     public void updateEventStatus(int eventId, String status) throws SQLException, IllegalArgumentException {
-        // Vérifier que le statut est valide
-        if (!isValidStatus(status)) {
-            throw new IllegalArgumentException("Statut invalide: " + status);
-        }
-
-        // Récupérer l'événement pour les notifications
+        // Vérifier que l'événement existe
         Event event = getEventById(eventId);
         if (event == null) {
-            throw new IllegalArgumentException("Événement non trouvé avec l'ID: " + eventId);
+            throw new IllegalArgumentException("L'événement n'existe pas");
+        }
+
+        // Vérifier que le statut est valide
+        if (!isValidStatus(status)) {
+            throw new IllegalArgumentException("Le statut n'est pas valide");
         }
 
         String query = "UPDATE event SET status = ? WHERE id = ?";
@@ -145,24 +142,14 @@ public class EventService {
 
             statement.executeUpdate();
 
-            // Si le statut est accepté, envoyer un SMS à l'organisateur
+            // Si le statut est accepté, envoyer un SMS à l'administrateur
             if (status.equals(STATUS_APPROVED)) {
                 // Récupérer les informations de l'événement pour le SMS
                 String eventTitle = event.getTitle();
                 String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
 
-                // Envoyer un SMS à l'organisateur
+                // Envoyer un SMS à l'administrateur
                 sendEventApprovalSMS(eventTitle, userName);
-            }
-            
-            // Si le statut est rejeté, envoyer un SMS à l'organisateur
-            if (status.equals(STATUS_REJECTED)) {
-                // Récupérer les informations de l'événement pour le SMS
-                String eventTitle = event.getTitle();
-                String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
-
-                // Envoyer un SMS à l'organisateur
-                sendEventRejectionSMS(eventTitle, userName);
             }
         }
     }
@@ -342,25 +329,5 @@ public class EventService {
         event.setUser(user);
 
         return event;
-    }
-
-    /**
-     * Envoie un SMS à l'organisateur pour l'informer que son événement a été rejeté
-     * @param eventTitle Le titre de l'événement
-     * @param userName Le nom de l'organisateur
-     */
-    private void sendEventRejectionSMS(String eventTitle, String userName) {
-        try {
-            // Récupérer le service SMS
-            SMSService smsService = SMSService.getInstance();
-            
-            // Construire le message
-            String message = "Bonjour " + userName + ", votre événement \"" + eventTitle + "\" a été rejeté par l'administrateur.";
-            
-            // Envoyer le SMS
-            smsService.sendSMS("+21600000000", message); // Remplacer par le numéro de l'organisateur
-        } catch (Exception e) {
-            System.err.println("Erreur lors de l'envoi du SMS de rejet: " + e.getMessage());
-        }
     }
 }

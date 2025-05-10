@@ -137,9 +137,8 @@ public class EventValidator {
             return "Le statut est obligatoire";
         }
 
-        if (!status.equals("actif") && !status.equals("annulé") && !status.equals("complet") &&
-            !status.equals("en attente") && !status.equals("accepté") && !status.equals("rejeté")) {
-            return "Le statut est invalide (valeurs acceptées : en attente, accepté, rejeté, actif, annulé, complet)";
+        if (!status.equals("en attente") && !status.equals("accepté") && !status.equals("rejeté")) {
+            return "Le statut est invalide (valeurs acceptées : en attente, accepté, rejeté)";
         }
 
         return null;

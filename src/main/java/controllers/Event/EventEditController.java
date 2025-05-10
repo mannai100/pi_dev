@@ -112,8 +112,8 @@ public class EventEditController implements Initializable {
         // L'initialisation du spinner pour le nombre maximum de participants a été supprimée
 
         // Initialiser le combobox pour le statut
-        statusComboBox.getItems().addAll("actif", "annulé", "complet");
-        statusComboBox.setValue("actif");
+        statusComboBox.getItems().addAll("accepté", "rejeté", "en attente");
+        statusComboBox.setValue("accepté");
 
         // Désactiver le champ de texte pour l'image (lecture seule)
         imageField.setEditable(false);

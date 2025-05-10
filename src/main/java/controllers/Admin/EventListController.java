@@ -105,12 +105,10 @@ public class EventListController implements Initializable {
                             Label statusLabel = new Label("Statut: " + event.getStatus());
 
                             // Appliquer un style différent selon le statut
-                            if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus())) {
+                            if ("accepté".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
-                            } else if ("annulé".equals(event.getStatus()) || "rejeté".equals(event.getStatus())) {
+                            } else if ("rejeté".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-                            } else if ("complet".equals(event.getStatus())) {
-                                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
                             } else if ("en attente".equals(event.getStatus())) {
                                 statusLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold;");
                             }
@@ -171,12 +169,10 @@ public class EventListController implements Initializable {
 
             // Statut de l'événement
             Label statusLabel = new Label("Statut: " + event.getStatus());
-            if ("actif".equals(event.getStatus()) || "accepté".equals(event.getStatus())) {
+            if ("accepté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("annulé".equals(event.getStatus()) || "rejeté".equals(event.getStatus())) {
+            } else if ("rejeté".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("complet".equals(event.getStatus())) {
-                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold; -fx-font-size: 14px;");
             } else if ("en attente".equals(event.getStatus())) {
                 statusLabel.setStyle("-fx-text-fill: #3498db; -fx-font-weight: bold; -fx-font-size: 14px;");
             }
