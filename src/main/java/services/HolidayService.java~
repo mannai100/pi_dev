@@ -1,0 +1,191 @@
+package services;
+
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class HolidayService {
+
+    // la clé API que pour Calendarific
+    private static final String API_KEY = "F2odPDmQ6t9QGSPMMTi50RUSXRbpkJPb";
+    private static final String API_URL = "https://calendarific.com/api/v2/holidays";
+
+    // Instance unique pour le pattern Singleton
+    private static HolidayService instance;
+
+    // Constructeur privé pour empêcher l'instanciation directe
+    private HolidayService() {
+        // Constructeur privé
+    }
+
+    /**
+     * Obtenir l'instance unique du service
+     * @return L'instance du service
+     */
+    public static HolidayService getInstance() {
+        if (instance == null) {
+            instance = new HolidayService();
+        }
+        return instance;
+    }
+
+    /**
+     * Récupère les jours fériés en français
+     * @return Liste des jours fériés formatés en français
+     * @throws IOException En cas d'erreur lors de l'appel API
+     */
+    public List<String> getHolidays() throws IOException {
+        return getHolidays("fr");
+    }
+    
+    /**
+     * Récupère les jours fériés dans la langue spécifiée
+     * @param language Code de langue ("fr" pour français, "ar" pour arabe)
+     * @return Liste des jours fériés formatés dans la langue spécifiée
+     * @throws IOException En cas d'erreur lors de l'appel API
+     */
+    public List<String> getHolidays(String language) throws IOException {
+        String urlString = API_URL + "?api_key=" + API_KEY + "&country=TN&year=2025";
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        List<Holiday> holidays = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+
+        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            throw new IOException("API request failed with response code: " + connection.getResponseCode());
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            // Afficher la réponse brute pour le débogage
+            System.out.println("Réponse API brute: " + response.toString());
+
+            JSONObject jsonResponse = new JSONObject(response.toString());
+            JSONArray holidaysArray = jsonResponse.getJSONObject("response").getJSONArray("holidays");
+
+            System.out.println("\nTraitement des jours fériés:");
+            for (int i = 0; i < holidaysArray.length(); i++) {
+                JSONObject holiday = holidaysArray.getJSONObject(i);
+                String holidayName = holiday.getString("name");
+                
+                // Traduire le nom du jour férié si nécessaire
+                if (language.equals("fr")) {
+                    holidayName = translateToFrench(holidayName);
+                } else if (language.equals("ar")) {
+                    holidayName = translateToArabic(holidayName);
+                }
+
+                JSONObject dateObj = holiday.getJSONObject("date");
+                int year = dateObj.getJSONObject("datetime").getInt("year");
+                int month = dateObj.getJSONObject("datetime").getInt("month");
+                int day = dateObj.getJSONObject("datetime").getInt("day");
+
+                LocalDate holidayDate = LocalDate.of(year, month, day);
+                holidays.add(new Holiday(holidayName, holidayDate));
+            }
+        } catch (JSONException e) {
+            System.err.println("Erreur lors de l'analyse des données: " + e.getMessage());
+            throw new IOException("Échec de l'analyse des données", e);
+        }
+
+        // Formater et trier les résultats
+        List<String> formattedHolidays = holidays.stream()
+                .filter(holiday -> !holiday.date.isBefore(today))
+                .sorted((h1, h2) -> h1.date.compareTo(h2.date))
+                .map(holiday -> formatHoliday(holiday, language))
+                .collect(Collectors.toList());
+
+        return formattedHolidays;
+    }
+
+    /**
+     * Formate un objet Holiday en chaîne de caractères lisible dans la langue spécifiée
+     * @param holiday L'objet Holiday à formater
+     * @param language Code de langue ("fr" pour français, "ar" pour arabe)
+     * @return Chaîne formatée (ex: "Jour de l'an : 1 janvier 2023")
+     */
+    private String formatHoliday(Holiday holiday, String language) {
+        Locale locale;
+        if (language.equals("ar")) {
+            locale = new Locale("ar", "TN");
+        } else {
+            locale = Locale.FRENCH;
+        }
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", locale);
+        return holiday.name + " : " + holiday.date.format(formatter);
+    }
+    
+    /**
+     * Traduit le nom du jour férié en français
+     * @param englishName Nom en anglais
+     * @return Nom traduit en français
+     */
+    private String translateToFrench(String englishName) {
+        Map<String, String> translations = new HashMap<>();
+        translations.put("New Year's Day", "Jour de l'an");
+        translations.put("Independence Day", "Fête de l'indépendance");
+        translations.put("Revolution Day", "Fête de la révolution");
+        translations.put("Republic Day", "Fête de la république");
+        translations.put("Women's Day", "Journée de la femme");
+        translations.put("Labour Day", "Fête du travail");
+        translations.put("Martyrs' Day", "Journée des martyrs");
+        translations.put("Evacuation Day", "Fête de l'évacuation");
+        translations.put("Eid al-Fitr", "Aïd el-Fitr");
+        translations.put("Eid al-Adha", "Aïd el-Adha");
+        translations.put("Islamic New Year", "Nouvel an islamique");
+        translations.put("Prophet Muhammad's Birthday", "Mouled");
+        
+        return translations.getOrDefault(englishName, englishName);
+    }
+    
+    /**
+     * Traduit le nom du jour férié en arabe
+     * @param englishName Nom en anglais
+     * @return Nom traduit en arabe
+     */
+    private String translateToArabic(String englishName) {
+        Map<String, String> translations = new HashMap<>();
+        translations.put("New Year's Day", "رأس السنة الميلادية");
+        translations.put("Independence Day", "عيد الاستقلال");
+        translations.put("Revolution Day", "عيد الثورة");
+        translations.put("Republic Day", "عيد الجمهورية");
+        translations.put("Women's Day", "يوم المرأة");
+        translations.put("Labour Day", "عيد الشغل");
+        translations.put("Martyrs' Day", "يوم الشهداء");
+        translations.put("Evacuation Day", "عيد الجلاء");
+        translations.put("Eid al-Fitr", "عيد الفطر");
+        translations.put("Eid al-Adha", "عيد الأضحى");
+        translations.put("Islamic New Year", "رأس السنة الهجرية");
+        translations.put("Prophet Muhammad's Birthday", "المولد النبوي");
+        
+        return translations.getOrDefault(englishName, englishName);
+    }
+
+    private static class Holiday {
+        String name;
+        LocalDate date;
+
+        Holiday(String name, LocalDate date) {
+            this.name = name;
+            this.date = date;
+        }
+    }
+}

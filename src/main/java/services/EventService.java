@@ -2,7 +2,11 @@ package services;
 
 import entities.Event;
 import entities.User;
+import services.SMSService;
+import utils.EventValidator;
 import utils.MyDatabase;
+
+import java.util.Map;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,6 +18,11 @@ import java.util.List;
 public class EventService {
     private static EventService instance;
     private final Connection connection;
+
+    // Constantes pour les statuts d'événement
+    public static final String STATUS_PENDING = "en attente";
+    public static final String STATUS_APPROVED = "accepté";
+    public static final String STATUS_REJECTED = "rejeté";
 
     /**
      * Constructeur privé pour le pattern Singleton
@@ -37,27 +46,41 @@ public class EventService {
      * Ajouter un nouvel événement
      * @param event L'événement à ajouter
      * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement est invalide
      */
-    public void addEvent(Event event) throws SQLException {
-        String query = "INSERT INTO event (organiser_id, title, description, date_debut, date_fin, max_participants, status, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public void addEvent(Event event) throws SQLException, IllegalArgumentException {
+        // Valider l'événement
+        Map<String, String> errors = EventValidator.validate(event);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(EventValidator.formatErrors(errors));
+        }
+
+        // Définir le statut par défaut à "en attente" si non spécifié
+        if (event.getStatus() == null || event.getStatus().isEmpty()) {
+            event.setStatus(STATUS_PENDING);
+        }
+
+        String query = "INSERT INTO event (user_id, title, description, date_debut, date_fin, status, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, event.getOrganiser().getId());
+            statement.setInt(1, event.getUser().getId());
             statement.setString(2, event.getTitle());
             statement.setString(3, event.getDescription());
             statement.setTimestamp(4, new Timestamp(event.getDate_debut().getTime()));
             statement.setTimestamp(5, new Timestamp(event.getDate_fin().getTime()));
-            statement.setInt(6, event.getMax_participants());
-            statement.setString(7, event.getStatus());
-            statement.setString(8, event.getImage());
-            
+            statement.setString(6, event.getStatus());
+            statement.setString(7, event.getImage());
+
             statement.executeUpdate();
-            
+
             // Récupérer l'ID généré
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     event.setId(generatedKeys.getInt(1));
                 }
             }
+
+            // Envoyer un SMS à l'administrateur pour l'informer du nouvel événement
+            sendNewEventSMS(event);
         }
     }
 
@@ -65,20 +88,137 @@ public class EventService {
      * Mettre à jour un événement existant
      * @param event L'événement à mettre à jour
      * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement est invalide
      */
-    public void updateEvent(Event event) throws SQLException {
-        String query = "UPDATE event SET title = ?, description = ?, date_debut = ?, date_fin = ?, max_participants = ?, status = ?, image = ? WHERE id = ?";
+    public void updateEvent(Event event) throws SQLException, IllegalArgumentException {
+        // Valider l'événement
+        Map<String, String> errors = EventValidator.validate(event);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(EventValidator.formatErrors(errors));
+        }
+
+        // Vérifier que l'événement existe
+        if (event.getId() <= 0 || getEventById(event.getId()) == null) {
+            throw new IllegalArgumentException("L'événement n'existe pas");
+        }
+
+        String query = "UPDATE event SET title = ?, description = ?, date_debut = ?, date_fin = ?, status = ?, image = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, event.getTitle());
             statement.setString(2, event.getDescription());
             statement.setTimestamp(3, new Timestamp(event.getDate_debut().getTime()));
             statement.setTimestamp(4, new Timestamp(event.getDate_fin().getTime()));
-            statement.setInt(5, event.getMax_participants());
-            statement.setString(6, event.getStatus());
-            statement.setString(7, event.getImage());
-            statement.setInt(8, event.getId());
-            
+            statement.setString(5, event.getStatus());
+            statement.setString(6, event.getImage());
+            statement.setInt(7, event.getId());
+
             statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Mettre à jour le statut d'un événement
+     * @param eventId L'ID de l'événement
+     * @param status Le nouveau statut
+     * @throws SQLException En cas d'erreur SQL
+     * @throws IllegalArgumentException Si l'événement n'existe pas
+     */
+    public void updateEventStatus(int eventId, String status) throws SQLException, IllegalArgumentException {
+        // Vérifier que l'événement existe
+        Event event = getEventById(eventId);
+        if (event == null) {
+            throw new IllegalArgumentException("L'événement n'existe pas");
+        }
+
+        // Vérifier que le statut est valide
+        if (!isValidStatus(status)) {
+            throw new IllegalArgumentException("Le statut n'est pas valide");
+        }
+
+        String query = "UPDATE event SET status = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, status);
+            statement.setInt(2, eventId);
+
+            statement.executeUpdate();
+
+            // Si le statut est accepté, envoyer un SMS à l'administrateur
+            if (status.equals(STATUS_APPROVED)) {
+                // Récupérer les informations de l'événement pour le SMS
+                String eventTitle = event.getTitle();
+                String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
+
+                // Envoyer un SMS à l'administrateur
+                sendEventApprovalSMS(eventTitle, userName);
+            }
+        }
+    }
+
+    /**
+     * Vérifier si un statut est valide
+     * @param status Le statut à vérifier
+     * @return true si le statut est valide, false sinon
+     */
+    private boolean isValidStatus(String status) {
+        return status != null && (
+            status.equals(STATUS_PENDING) ||
+            status.equals(STATUS_APPROVED) ||
+            status.equals(STATUS_REJECTED)
+        );
+    }
+
+    /**
+     * Envoyer un SMS pour notifier de l'approbation d'un événement
+     * @param eventTitle Le titre de l'événement
+     * @param userName Le nom de l'utilisateur qui a créé l'événement
+     */
+    private void sendEventApprovalSMS(String eventTitle, String userName) {
+        try {
+            // Numéro de téléphone de l'administrateur
+            String adminPhoneNumber = "+21655667940";
+
+            // Message à envoyer
+            String message = "Un nouvel événement a été approuvé: '" + eventTitle + "' créé par " + userName;
+
+            // Envoyer le SMS
+            SMSService.sendSMS(adminPhoneNumber, message);
+
+            System.out.println("SMS envoyé à l'administrateur: " + message);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Envoyer un SMS pour notifier de la création d'un nouvel événement
+     * @param event L'événement créé
+     */
+    private void sendNewEventSMS(Event event) {
+        try {
+            // Vérifier que l'événement et l'utilisateur ne sont pas null
+            if (event == null || event.getUser() == null) {
+                System.err.println("Impossible d'envoyer le SMS: événement ou utilisateur null");
+                return;
+            }
+
+            // Numéro de téléphone de l'administrateur
+            String adminPhoneNumber = "+21655667940";
+
+            // Récupérer les informations de l'événement pour le SMS
+            String eventTitle = event.getTitle();
+            String userName = event.getUser().getPrenom() + " " + event.getUser().getNom();
+
+            // Message à envoyer
+            String message = "Nouvel événement en attente d'approbation: '" + eventTitle + "' créé par " + userName;
+
+            // Envoyer le SMS
+            SMSService.sendSMS(adminPhoneNumber, message);
+
+            System.out.println("SMS envoyé à l'administrateur: " + message);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -102,17 +242,17 @@ public class EventService {
      * @throws SQLException En cas d'erreur SQL
      */
     public Event getEventById(int eventId) throws SQLException {
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id WHERE e.id = ?";
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id WHERE e.id = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, eventId);
-            
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return createEventFromResultSet(resultSet);
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -123,16 +263,16 @@ public class EventService {
      */
     public List<Event> getAllEvents() throws SQLException {
         List<Event> events = new ArrayList<>();
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id";
-        
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id";
+
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
-            
+
             while (resultSet.next()) {
                 events.add(createEventFromResultSet(resultSet));
             }
         }
-        
+
         return events;
     }
 
@@ -142,20 +282,20 @@ public class EventService {
      * @return La liste des événements
      * @throws SQLException En cas d'erreur SQL
      */
-    public List<Event> getEventsByOrganiser(int userId) throws SQLException {
+    public List<Event> getEventsByUser(int userId) throws SQLException {
         List<Event> events = new ArrayList<>();
-        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.organiser_id = u.id WHERE e.organiser_id = ?";
-        
+        String query = "SELECT e.*, u.id as user_id, u.nom, u.prenom, u.email FROM event e JOIN user u ON e.user_id = u.id WHERE e.user_id = ?";
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userId);
-            
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     events.add(createEventFromResultSet(resultSet));
                 }
             }
         }
-        
+
         return events;
     }
 
@@ -172,19 +312,19 @@ public class EventService {
         event.setDescription(resultSet.getString("description"));
         event.setDate_debut(resultSet.getTimestamp("date_debut"));
         event.setDate_fin(resultSet.getTimestamp("date_fin"));
-        event.setMax_participants(resultSet.getInt("max_participants"));
+        // Le champ max_participants a été supprimé
         event.setStatus(resultSet.getString("status"));
         event.setImage(resultSet.getString("image"));
-        
+
         // Créer l'organisateur
-        User organiser = new User();
-        organiser.setId(resultSet.getInt("user_id"));
-        organiser.setNom(resultSet.getString("nom"));
-        organiser.setPrenom(resultSet.getString("prenom"));
-        organiser.setEmail(resultSet.getString("email"));
-        
-        event.setOrganiser(organiser);
-        
+        User user = new User();
+        user.setId(resultSet.getInt("user_id"));
+        user.setNom(resultSet.getString("nom"));
+        user.setPrenom(resultSet.getString("prenom"));
+        user.setEmail(resultSet.getString("email"));
+
+        event.setUser(user);
+
         return event;
     }
 }

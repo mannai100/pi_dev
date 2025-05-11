@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.Rectangle?>
+
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.Event.EventViewController"
+            prefHeight="600.0" prefWidth="500.0"
+            stylesheets="@../../css/style.css">
+
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT">
+            <VBox>
+                <Text fx:id="titleLabel" text="Titre de l'événement" styleClass="header-title"/>
+                <Text text="Détails de l'événement" styleClass="header-subtitle"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="form-container">
+            <VBox spacing="20" styleClass="event-card">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <!-- Image de l'événement -->
+                <StackPane>
+                    <ImageView fx:id="eventImageView" fitWidth="460" fitHeight="200" preserveRatio="true">
+                        <StackPane.margin>
+                            <Insets bottom="10"/>
+                        </StackPane.margin>
+                    </ImageView>
+
+                    <!-- Afficher un placeholder si pas d'image -->
+                    <Rectangle fx:id="imagePlaceholder" width="460" height="200" arcWidth="10" arcHeight="10" fill="#e0e0e0" visible="false">
+                        <StackPane.margin>
+                            <Insets bottom="10"/>
+                        </StackPane.margin>
+                    </Rectangle>
+
+                    <Text fx:id="noImageText" text="Aucune image disponible" visible="false" style="-fx-font-size: 16px; -fx-fill: #7f8c8d;"/>
+                </StackPane>
+
+                <!-- Statut de l'événement -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label fx:id="statusLabel" text="actif" styleClass="status-active"/>
+                    <Pane HBox.hgrow="ALWAYS" />
+                    <!-- Le label pour le nombre maximum de participants a été supprimé -->
+                </HBox>
+
+                <!-- Description -->
+                <VBox spacing="5">
+                    <Label text="Description" styleClass="form-label"/>
+                    <TextFlow>
+                        <Text fx:id="descriptionText" text="Description de l'événement" styleClass="event-description" wrappingWidth="440"/>
+                    </TextFlow>
+                </VBox>
+
+                <!-- Dates -->
+                <VBox spacing="5">
+                    <Label text="Dates" styleClass="form-label"/>
+                    <HBox spacing="20">
+                        <VBox spacing="5">
+                            <Label text="Début:" styleClass="event-info"/>
+                            <Label fx:id="dateDebutLabel" text="01/01/2025 08:00" styleClass="event-date"/>
+                        </VBox>
+
+                        <VBox spacing="5">
+                            <Label text="Fin:" styleClass="event-info"/>
+                            <Label fx:id="dateFinLabel" text="01/01/2025 18:00" styleClass="event-date"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Organisateur -->
+                <VBox spacing="5">
+                    <Label text="Organisateur" styleClass="form-label"/>
+                    <Label fx:id="userLabel" text="Nom de l'organisateur" styleClass="event-info"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="15" styleClass="footer">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+
+            <Button fx:id="avisButton" text="Avis" onAction="#handleAvis" styleClass="button-info"/>
+            <Button fx:id="reserveButton" text="Réserver" onAction="#handleReserve" styleClass="button-success"/>
+            <Button fx:id="editButton" text="Modifier" onAction="#handleEdit" styleClass="button-warning"/>
+            <Button fx:id="closeButton" text="Fermer" onAction="#handleClose" defaultButton="true" styleClass="button"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.Event.EventListController"
+            prefHeight="600.0" prefWidth="900.0"
+            stylesheets="@../../css/style.css">
+
+    <top>
+        <VBox>
+            <!-- En-tête -->
+            <HBox styleClass="header" alignment="CENTER_LEFT">
+                <VBox>
+                    <Text text="Événements" styleClass="header-title"/>
+                    <Text text="Découvrez et Reservez des événements passionnants" styleClass="header-subtitle"/>
+                </VBox>
+            </HBox>
+            
+            <!-- Notification sur les jours fériés -->
+            <VBox fx:id="holidayNoticeBox" styleClass="holiday-notice" visible="false">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label styleClass="holiday-icon" text="📅"/>
+                    <VBox spacing="3">
+                        <Label text="Information importante" styleClass="holiday-title"/>
+                        <Text text="La validation des événements par l'administrateur ne sera pas prise en compte pendant les weekends et les jours fériés." 
+                              styleClass="holiday-text" wrappingWidth="700"/>
+                    </VBox>
+                    <Pane HBox.hgrow="ALWAYS" />
+                    <Button fx:id="showHolidaysBtn" text="Voir les jours fériés" styleClass="holiday-button" onAction="#handleShowHolidays"/>
+                </HBox>
+            </VBox>
+
+            <!-- Barre de recherche -->
+            <HBox styleClass="search-bar" alignment="CENTER_LEFT" spacing="15">
+                <TextField fx:id="searchField" promptText="Rechercher un événement..." styleClass="search-field" prefWidth="300"/>
+                <Label text="Statut:" styleClass="form-label"/>
+                <ComboBox fx:id="statusFilter" prefWidth="150" styleClass="filter-combo"/>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="Rafraîchir" onAction="#handleRefresh" styleClass="button"/>
+                <Button text="Effacer les filtres" onAction="#handleClearFilters" styleClass="button"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <BorderPane>
+            <center>
+                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="custom-scroll-pane">
+                    <VBox fx:id="eventsContainer" spacing="10" styleClass="event-list-container">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+                    </VBox>
+                </ScrollPane>
+            </center>
+
+            <!-- Bouton flottant d'ajout -->
+            <bottom>
+                <StackPane alignment="BOTTOM_RIGHT" mouseTransparent="false">
+                    <Button text="+" onAction="#handleAddEvent" styleClass="floating-add-button">
+                        <StackPane.margin>
+                            <Insets right="30" bottom="30"/>
+                        </StackPane.margin>
+                    </Button>
+                </StackPane>
+            </bottom>
+        </BorderPane>
+    </center>
+
+    <bottom>
+        <HBox styleClass="footer" alignment="CENTER_RIGHT" spacing="10">
+            <Text fx:id="totalEventsText" text="Total: 0 événement(s)" styleClass="footer-text"/>
+        </HBox>
+    </bottom>
+</BorderPane>

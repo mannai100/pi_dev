@@ -104,34 +104,45 @@ public class LoginController {
         try {
             // Déterminer le type d'utilisateur
             String userType = roleService.getUserType(user);
-            String fxmlPath;
             String title;
 
             // Choisir le tableau de bord approprié
+            String fxmlPath;
             if (userType != null && (userType.equals(RoleService.ROLE_ADMIN) || userType.equals(RoleService.ROLE_SUPER_ADMIN))) {
-                fxmlPath = "src/main/resources/fxml/AdminDashboard.fxml";
-                title = "Tableau de bord administrateur";
+                fxmlPath = "/fxml/admin/AdminDashboard.fxml";
+                title = "Panneau d'administration";
             } else {
-                fxmlPath = "src/main/resources/fxml/ClientDashboard.fxml";
+                fxmlPath = "/fxml/ClientDashboard.fxml";
                 title = "Tableau de bord client";
             }
 
-            // Charger le fichier FXML
-            File file = new File(fxmlPath);
-            if (file.exists()) {
-                URL url = file.toURI().toURL();
-                FXMLLoader loader = new FXMLLoader(url);
-                Parent root = loader.load();
+            // Obtenir l'URL du fichier FXML
+            URL url = getClass().getResource(fxmlPath);
+            System.out.println("URL du fichier FXML: " + url);
 
-                // Configurer la scène
-                Stage stage = (Stage) loginButton.getScene().getWindow();
-                Scene scene = new Scene(root);
-                stage.setScene(scene);
-                stage.setTitle(title);
-                stage.show();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+            if (url == null) {
+                System.err.println("Impossible de trouver le fichier FXML: " + fxmlPath);
+
+                // Essayer avec un chemin absolu
+                File file = new File("src/main/resources" + fxmlPath);
+                if (file.exists()) {
+                    url = file.toURI().toURL();
+                    System.out.println("URL créée à partir du fichier: " + url);
+                } else {
+                    throw new IOException("Fichier FXML introuvable: " + fxmlPath);
+                }
             }
+
+            // Charger le fichier FXML
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            // Configurer la scène
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            stage.show();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur de rôle", "Impossible de déterminer le rôle de l'utilisateur: " + e.getMessage());
             e.printStackTrace();
