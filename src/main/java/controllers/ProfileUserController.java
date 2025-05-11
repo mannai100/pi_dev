@@ -2,6 +2,9 @@ package controllers;
 
 import entities.User;
 import entities.UserSession;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import services.UserService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -9,6 +12,8 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+
+import java.io.IOException;
 import java.util.Optional;
 import java.sql.SQLException;
 import javafx.scene.image.Image;
@@ -52,6 +57,9 @@ public class ProfileUserController implements Initializable {
 
     @FXML
     private Button changePasswordButton;
+
+    @FXML
+    private Button setup2FAButton;
 
     private User currentUser;
     private UserService userService;
@@ -117,13 +125,31 @@ public class ProfileUserController implements Initializable {
     private void loadDefaultProfileImage() {
         try {
             // Charger une image par défaut depuis les ressources
+            // Essayer plusieurs chemins possibles
             URL defaultImageUrl = getClass().getResource("/images/default-profile.png");
+
+            if (defaultImageUrl == null) {
+                // Essayer un autre chemin
+                defaultImageUrl = getClass().getClassLoader().getResource("images/default-profile.png");
+            }
+
+            if (defaultImageUrl == null) {
+                // Essayer un chemin absolu
+                File file = new File("src/main/resources/images/default-profile.png");
+                if (file.exists()) {
+                    defaultImageUrl = file.toURI().toURL();
+                }
+            }
+
             if (defaultImageUrl != null) {
                 Image defaultImage = new Image(defaultImageUrl.toString());
                 profileImage.setImage(defaultImage);
+            } else {
+                System.err.println("Image par défaut introuvable");
             }
         } catch (Exception e) {
             System.err.println("Erreur lors du chargement de l'image par défaut: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -139,6 +165,9 @@ public class ProfileUserController implements Initializable {
 
         // Action du bouton Modifier mot de passe
         changePasswordButton.setOnAction(event -> handleChangePassword());
+
+        // Action du bouton Configurer 2FA
+        setup2FAButton.setOnAction(event -> handleSetup2FA());
 
         // Action pour changer l'image de profil
         profileImage.setOnMouseClicked(event -> handleChangeProfileImage());
@@ -315,6 +344,33 @@ public class ProfileUserController implements Initializable {
                 showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors du chargement de l'image: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Gère l'action du bouton Configurer l'authentification à deux facteurs
+     */
+    @FXML
+    private void handleSetup2FA() {
+        try {
+            // Charger la vue 2FA
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/2fa.fxml"));
+            Parent root = loader.load();
+
+            // Récupérer le contrôleur et lui passer l'email de l'utilisateur
+            controller2fa controller = loader.getController();
+            controller.setEmail(currentUser.getEmail());
+
+            // Afficher la fenêtre 2FA
+            Stage stage = new Stage();
+            stage.setTitle("Configuration de l'authentification à deux facteurs");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+        } catch (IOException e) {
+            System.err.println("Erreur lors du chargement de la page 2FA : " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger la page de configuration 2FA : " + e.getMessage());
         }
     }
 

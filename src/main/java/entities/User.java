@@ -16,6 +16,7 @@ public class User {
     private List<String> role;
     private String password;
     private String imageUrl;
+    private String secretKey; // Clé secrète pour l'authentification à deux facteurs
 
     // Constructeur par défaut
     public User() {
@@ -23,7 +24,7 @@ public class User {
     }
 
     // Constructeur avec tous les paramètres
-    public User(int id, String nom, String email, String prenom, String adresse, String telephone, boolean isVerified, Timestamp created_at, String password, String imageUrl) {
+    public User(int id, String nom, String email, String prenom, String adresse, String telephone, boolean isVerified, Timestamp created_at, String password, String imageUrl, String secretKey) {
         this.id = id;
         this.nom = nom;
         this.email = email;
@@ -34,6 +35,7 @@ public class User {
         this.created_at = created_at;
         this.password = password;
         this.imageUrl = imageUrl;
+        this.secretKey = secretKey;
         this.role = new ArrayList<>();
     }
 
@@ -126,6 +128,14 @@ public class User {
         this.imageUrl = imageUrl;
     }
 
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -139,6 +149,7 @@ public class User {
                 ", created_at=" + created_at +
                 ", role=" + role +
                 ", imageUrl='" + imageUrl + '\'' +
+                ", secretKey='" + (secretKey != null ? "***" : "null") + '\'' +
                 '}';
     }
 }
