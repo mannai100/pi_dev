@@ -11,12 +11,19 @@ module org.example.workshopjdbc {
     requires aerogear.otp.java;
     requires jbcrypt;
     requires javax.mail.api;
+    requires twilio;
+    requires org.json;
+
 
     opens tests to javafx.fxml, javafx.graphics, javafx.base;
     opens controllers to javafx.fxml, javafx.graphics, javafx.base;
     opens entities to javafx.base, javafx.fxml;
+    opens controllers.Event to javafx.fxml, javafx.graphics, javafx.base;
+    opens controllers.Admin to javafx.fxml, javafx.graphics, javafx.base;
 
     exports tests;
     exports controllers;
     exports entities;
+    exports controllers.Event;
+    exports controllers.Admin;
 }

@@ -7,12 +7,11 @@ import java.util.Date;
  */
 public class Event {
     private int id;
-    private User organiser;
+    private User user;
     private String title;
     private String description;
     private Date date_debut;
     private Date date_fin;
-    private int max_participants;
     private String status;
     private String image;
 
@@ -25,45 +24,41 @@ public class Event {
     /**
      * Constructeur avec tous les paramètres
      * @param id Identifiant de l'événement
-     * @param organiser Organisateur de l'événement
      * @param title Titre de l'événement
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
      * @param date_fin Date de fin de l'événement
-     * @param max_participants Nombre maximum de participants
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(int id, User organiser, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
+    public Event(int id, User user, String title, String description, Date date_debut, Date date_fin, String status, String image) {
         this.id = id;
-        this.organiser = organiser;
+        this.user = user;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
         this.date_fin = date_fin;
-        this.max_participants = max_participants;
+        // Le champ max_participants a été supprimé
         this.status = status;
         this.image = image;
     }
 
     /**
      * Constructeur sans id (pour les nouveaux événements)
-     * @param organiser Organisateur de l'événement
      * @param title Titre de l'événement
      * @param description Description de l'événement
      * @param date_debut Date de début de l'événement
      * @param date_fin Date de fin de l'événement
-     * @param max_participants Nombre maximum de participants
      * @param status Statut de l'événement
      * @param image Image de l'événement
      */
-    public Event(User organiser, String title, String description, Date date_debut, Date date_fin, int max_participants, String status, String image) {
-        this.organiser = organiser;
+    public Event(User user, String title, String description, Date date_debut, Date date_fin, String status, String image) {
+        this.user = user;
         this.title = title;
         this.description = description;
         this.date_debut = date_debut;
         this.date_fin = date_fin;
-        this.max_participants = max_participants;
+        // Le champ max_participants a été supprimé
         this.status = status;
         this.image = image;
     }
@@ -77,12 +72,12 @@ public class Event {
         this.id = id;
     }
 
-    public User getOrganiser() {
-        return organiser;
+    public User getUser() {
+        return user;
     }
 
-    public void setOrganiser(User organiser) {
-        this.organiser = organiser;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getTitle() {
@@ -117,13 +112,7 @@ public class Event {
         this.date_fin = date_fin;
     }
 
-    public int getMax_participants() {
-        return max_participants;
-    }
-
-    public void setMax_participants(int max_participants) {
-        this.max_participants = max_participants;
-    }
+    // Les getters et setters pour max_participants ont été supprimés
 
     public String getStatus() {
         return status;
@@ -145,12 +134,12 @@ public class Event {
     public String toString() {
         return "Event{" +
                 "id=" + id +
-                ", organiser=" + organiser +
+                ", user=" + user +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", date_debut=" + date_debut +
                 ", date_fin=" + date_fin +
-                ", max_participants=" + max_participants +
+                // Le champ max_participants a été supprimé +
                 ", status='" + status + '\'' +
                 ", image='" + image + '\'' +
                 '}';

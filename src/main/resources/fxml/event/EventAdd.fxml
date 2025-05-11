@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.Event.EventAddController"
+      prefWidth="500.0" prefHeight="600.0"
+      stylesheets="@../../css/style.css">
+
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT">
+            <VBox>
+                <Text text="Créer un événement" styleClass="header-title"/>
+                <Text text="Partagez votre événement avec la communauté" styleClass="header-subtitle"/>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="form-container">
+            <VBox spacing="20" styleClass="form-container">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <VBox spacing="5">
+                    <Label text="Titre de l'événement" styleClass="form-label"/>
+                    <TextField fx:id="titleField" promptText="Entrez un titre accrocheur" styleClass="form-field"/>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="Description" styleClass="form-label"/>
+                    <TextArea fx:id="descriptionArea" promptText="Décrivez votre événement en détail" prefHeight="100" wrapText="true" styleClass="form-field"/>
+                </VBox>
+
+                <HBox spacing="20">
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="Date de début" styleClass="form-label"/>
+                        <DatePicker fx:id="dateDebutPicker" promptText="Sélectionnez une date" styleClass="form-field" maxWidth="Infinity"/>
+                    </VBox>
+
+                    <VBox spacing="5">
+                        <Label text="Heure de début" styleClass="form-label"/>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Spinner fx:id="heureDebutSpinner" prefWidth="70" editable="true" styleClass="form-field"/>
+                            <Label text="h" styleClass="form-label"/>
+                            <Spinner fx:id="minuteDebutSpinner" prefWidth="70" editable="true" styleClass="form-field"/>
+                            <Label text="min" styleClass="form-label"/>
+                        </HBox>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="20">
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="Date de fin" styleClass="form-label"/>
+                        <DatePicker fx:id="dateFinPicker" promptText="Sélectionnez une date" styleClass="form-field" maxWidth="Infinity"/>
+                    </VBox>
+
+                    <VBox spacing="5">
+                        <Label text="Heure de fin" styleClass="form-label"/>
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <Spinner fx:id="heureFinSpinner" prefWidth="70" editable="true" styleClass="form-field"/>
+                            <Label text="h" styleClass="form-label"/>
+                            <Spinner fx:id="minuteFinSpinner" prefWidth="70" editable="true" styleClass="form-field"/>
+                            <Label text="min" styleClass="form-label"/>
+                        </HBox>
+                    </VBox>
+                </HBox>
+
+                <VBox spacing="5">
+                    <Label text="Statut" styleClass="form-label"/>
+                    <ComboBox fx:id="statusComboBox" promptText="Sélectionnez un statut" styleClass="form-field" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="Image de l'événement" styleClass="form-label"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="imageField" promptText="Aucune image sélectionnée" styleClass="form-field" editable="false" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="browseButton" text="Parcourir..." onAction="#handleBrowseImage" styleClass="button"/>
+                    </HBox>
+                    <ImageView fx:id="imagePreview" fitHeight="150" preserveRatio="true" visible="false"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="15" alignment="CENTER_RIGHT" styleClass="footer">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <Button fx:id="cancelButton" text="Annuler" onAction="#handleCancel" styleClass="button-danger"/>
+            <Button fx:id="saveButton" text="Enregistrer" onAction="#handleSave" defaultButton="true" styleClass="button-success"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
