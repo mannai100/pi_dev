@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import utils.DatabaseUpdater;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +38,16 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
+        // Mettre à jour la structure de la base de données avant de lancer l'application
+        System.out.println("Mise à jour de la structure de la base de données...");
+        boolean updated = DatabaseUpdater.getInstance().updateDatabaseStructure();
+        if (updated) {
+            System.out.println("Structure de la base de données mise à jour avec succès.");
+        } else {
+            System.err.println("Erreur lors de la mise à jour de la structure de la base de données.");
+        }
+
+        // Lancer l'application
         launch(args);
     }
 }

@@ -13,8 +13,10 @@ import javafx.stage.Stage;
 import services.AuthService;
 import services.RoleService;
 import org.jboss.aerogear.security.otp.Totp;
+import controllers.controller2fa;
 
 import java.util.Optional;
+import javafx.scene.control.ButtonBar;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +36,9 @@ public class LoginController {
 
     @FXML
     private Hyperlink registerLink;
+
+    @FXML
+    private Hyperlink forgotPasswordLink;
 
     private AuthService authService;
     private RoleService roleService;
@@ -60,6 +65,27 @@ public class LoginController {
             User user = authService.login(email, password);
 
             if (user != null) {
+                // Vérifier si le compte de l'utilisateur est vérifié
+                if (!user.isVerified()) {
+                    // Demander à l'utilisateur s'il souhaite configurer l'authentification à deux facteurs maintenant
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Compte non vérifié");
+                    alert.setHeaderText("Votre compte n'a pas encore été vérifié");
+                    alert.setContentText("Souhaitez-vous configurer l'authentification à deux facteurs maintenant ?");
+
+                    ButtonType buttonTypeYes = new ButtonType("Oui");
+                    ButtonType buttonTypeNo = new ButtonType("Non", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+                    alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.isPresent() && result.get() == buttonTypeYes) {
+                        // Rediriger vers la page de configuration 2FA
+                        navigateTo2FASetup(user.getEmail());
+                    }
+                    return;
+                }
+
                 // Vérifier si l'utilisateur a activé l'authentification à deux facteurs
                 if (user.getSecretKey() != null && !user.getSecretKey().isEmpty()) {
                     // Rediriger vers la page de vérification 2FA
@@ -109,7 +135,33 @@ public class LoginController {
         }
     }
 
+    /**
+     * Gère le clic sur le lien "Mot de passe oublié"
+     */
+    @FXML
+    private void handleForgotPassword(ActionEvent event) {
+        try {
+            // Charger la page de réinitialisation de mot de passe
+            File file = new File("src/main/resources/fxml/ResetPassword.fxml");
+            if (file.exists()) {
+                URL url = file.toURI().toURL();
+                FXMLLoader loader = new FXMLLoader(url);
+                Parent root = loader.load();
 
+                // Configurer la scène
+                Stage stage = (Stage) forgotPasswordLink.getScene().getWindow();
+                Scene scene = new Scene(root);
+                stage.setScene(scene);
+                stage.setTitle("Réinitialisation du mot de passe");
+                stage.show();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Erreur lors du chargement de la page de réinitialisation: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     private void navigateToDashboard(User user) throws IOException {
         try {
@@ -155,6 +207,38 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Navigue vers la page de configuration 2FA
+     * @param email L'email de l'utilisateur
+     */
+    private void navigateTo2FASetup(String email) {
+        try {
+            // Charger la page de configuration 2FA
+            File file = new File("src/main/resources/fxml/2fa.fxml");
+            if (file.exists()) {
+                URL url = file.toURI().toURL();
+                FXMLLoader loader = new FXMLLoader(url);
+                Parent root = loader.load();
+
+                // Récupérer le contrôleur et lui passer l'email
+                controller2fa controller = loader.getController();
+                controller.setEmail(email);
+
+                // Configurer la scène
+                Stage stage = (Stage) loginButton.getScene().getWindow();
+                Scene scene = new Scene(root);
+                stage.setScene(scene);
+                stage.setTitle("Configuration de l'authentification à deux facteurs");
+                stage.show();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Erreur lors du chargement de la page 2FA: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

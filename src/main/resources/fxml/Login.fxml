@@ -42,7 +42,7 @@
                 <HBox alignment="CENTER_LEFT">
                     <CheckBox text="Se souvenir de moi" style="-fx-text-fill: -fx-dark-color;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Hyperlink text="Mot de passe oublié ?" style="-fx-border-color: transparent;"/>
+                    <Hyperlink fx:id="forgotPasswordLink" text="Mot de passe oublié ?" style="-fx-border-color: transparent;" onAction="#handleForgotPassword"/>
                 </HBox>
             </VBox>
 

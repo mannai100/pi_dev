@@ -9,6 +9,8 @@ module org.example.workshopjdbc {
     requires com.google.zxing;
     requires com.google.zxing.javase;
     requires aerogear.otp.java;
+    requires jbcrypt;
+    requires javax.mail.api;
 
     opens tests to javafx.fxml, javafx.graphics, javafx.base;
     opens controllers to javafx.fxml, javafx.graphics, javafx.base;

@@ -162,7 +162,7 @@ public class controller2fa {
                     showAlert(Alert.AlertType.INFORMATION,
                             "Succès",
                             null,
-                            "✅ Code valide ! 2FA activé et enregistré dans la base de données.");
+                            "✅ Code valide ! Votre compte a été vérifié et l'authentification à deux facteurs a été activée.");
                     // Rediriger vers la page de connexion
                     // ...
                     goToLogin();

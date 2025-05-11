@@ -159,9 +159,16 @@ public class AuthService {
             statement.setString(2, email);
 
             int rowsAffected = statement.executeUpdate();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                System.out.println("Utilisateur " + email + " vérifié avec succès (is_verified = true).");
+                return true;
+            } else {
+                System.err.println("Aucune ligne affectée lors de la mise à jour de l'utilisateur " + email);
+                return false;
+            }
         } catch (SQLException e) {
             System.err.println("Erreur lors de la mise à jour de la clé secrète : " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
