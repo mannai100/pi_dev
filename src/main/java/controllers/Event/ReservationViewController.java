@@ -43,8 +43,7 @@ public class ReservationViewController implements Initializable {
     @FXML
     private Label dateReservationLabel;
 
-    @FXML
-    private Label statutLabel;
+    // Statut supprimé
 
     @FXML
     private Button confirmButton;
@@ -95,7 +94,6 @@ public class ReservationViewController implements Initializable {
         // Afficher les informations de la réservation
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         dateReservationLabel.setText(dateFormat.format(reservation.getDateReservation()));
-        statutLabel.setText(reservation.getStatut());
 
         // Configurer les boutons en fonction des droits de l'utilisateur
         try {
@@ -108,9 +106,8 @@ public class ReservationViewController implements Initializable {
 
             // Seuls l'admin et l'organisateur peuvent confirmer ou annuler
             boolean canManage = isAdmin || isOrganiser;
-            confirmButton.setVisible(canManage && "en attente".equals(reservation.getStatut()));
-            cancelButton.setVisible(canManage ||
-                    (user != null && currentUser != null && user.getId() == currentUser.getId() && "en attente".equals(reservation.getStatut())));
+            confirmButton.setVisible(canManage ||
+                    (user != null && currentUser != null && user.getId() == currentUser.getId()));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -120,7 +117,6 @@ public class ReservationViewController implements Initializable {
     public void handleConfirm(ActionEvent event) {
         try {
             reservationService.updateReservationStatus(reservation.getId(), "confirmé");
-            statutLabel.setText("confirmé");
             confirmButton.setVisible(false);
 
             // Rafraîchir les statistiques du tableau de bord
@@ -135,25 +131,7 @@ public class ReservationViewController implements Initializable {
         }
     }
 
-    @FXML
-    public void handleCancel(ActionEvent event) {
-        try {
-            reservationService.updateReservationStatus(reservation.getId(), "annulé");
-            statutLabel.setText("annulé");
-            confirmButton.setVisible(false);
-            cancelButton.setVisible(false);
 
-            // Rafraîchir les statistiques du tableau de bord
-            ClientDashboardController.refreshDashboardStatistics();
-
-            showAlert(Alert.AlertType.INFORMATION, "Succès", "La réservation a été annulée avec succès");
-        } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Erreur lors de l'annulation de la réservation: " + e.getMessage());
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur de validation", e.getMessage());
-        }
-    }
 
     @FXML
     public void handleClose(ActionEvent event) {

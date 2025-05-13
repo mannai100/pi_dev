@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -246,8 +247,28 @@ public class ClientDashboardController implements Initializable {
 
     @FXML
     public void handleViewProfile(ActionEvent event) {
-        showAlert(Alert.AlertType.INFORMATION, "Information", "Fonctionnalité non implémentée");
+        try {
+            // Charger le fichier FXML de la nouvelle interface (par exemple "ProfileView.fxml")
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("profileuser.fxml"));
+            Parent root = loader.load();
+
+            // Créer une nouvelle scène
+            Scene scene = new Scene(root);
+
+            // Obtenir la fenêtre actuelle à partir de l'événement
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Changer la scène
+            stage.setScene(scene);
+            stage.setTitle("Profil Utilisateur");
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Erreur", "Impossible de charger la vue du profil.");
+        }
     }
+
 
     @FXML
     public void handleEditProfile(ActionEvent event) {

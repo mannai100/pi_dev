@@ -88,7 +88,6 @@
             </padding>
             
             <Button fx:id="confirmButton" text="Confirmer" onAction="#handleConfirm" />
-            <Button fx:id="cancelButton" text="Annuler" onAction="#handleCancel" />
             <Button fx:id="closeButton" text="Fermer" onAction="#handleClose" defaultButton="true" />
         </HBox>
     </bottom>

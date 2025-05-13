@@ -20,6 +20,7 @@ public class RoleService {
 
     // Constantes pour les rôles
     public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_ORGANISATEUR = "organizateur";
     public static final String ROLE_CLIENT = "CLIENT";
     public static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
 

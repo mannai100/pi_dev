@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.image.*?>
+<?import java.net.URL?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.ProfileUserController"
+            prefHeight="600.0" prefWidth="800.0">
+
+    <!-- Styles CSS -->
+    <stylesheets>
+        <URL value="@../styles/forms.css" />
+    </stylesheets>
+
+    <top>
+        <HBox style="-fx-background-color: #3498db; -fx-padding: 15 30;" alignment="CENTER_LEFT" spacing="20">
+            <Text text="Profil Utilisateur" style="-fx-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Retour au tableau de bord" style="-fx-background-color: white; -fx-text-fill: #3498db; -fx-font-weight: bold; -fx-padding: 8 15; -fx-background-radius: 5px;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-border-color: transparent;">
+            <VBox spacing="20" style="-fx-padding: 20;">
+                <VBox styleClass="profile-container" spacing="20">
+                    <!-- Photo de profil -->
+                    <HBox alignment="CENTER" spacing="20">
+                        <VBox alignment="CENTER" spacing="10">
+                            <ImageView fx:id="profileImage" fitHeight="150" fitWidth="150" preserveRatio="true" styleClass="profile-image-container" onMouseClicked="#handleChangeProfileImage"/>
+                            <Button text="Changer la photo" styleClass="secondary-button" onAction="#handleChangeProfileImage"/>
+                        </VBox>
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Text styleClass="profile-title" text="Informations personnelles"/>
+                            <Text styleClass="profile-subtitle" text="Modifiez vos informations personnelles ci-dessous"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="15">
+                        <!-- Nom et Prénom -->
+                        <HBox spacing="20">
+                            <VBox spacing="5" styleClass="form-group" HBox.hgrow="ALWAYS">
+                                <Label text="Nom" styleClass="form-label"/>
+                                <TextField fx:id="lastNameField" promptText="Votre nom" styleClass="text-field"/>
+                            </VBox>
+
+                            <VBox spacing="5" styleClass="form-group" HBox.hgrow="ALWAYS">
+                                <Label text="Prénom" styleClass="form-label"/>
+                                <TextField fx:id="firstNameField" promptText="Votre prénom" styleClass="text-field"/>
+                            </VBox>
+                        </HBox>
+
+                        <!-- Email -->
+                        <VBox spacing="5" styleClass="form-group">
+                            <Label text="Email" styleClass="form-label"/>
+                            <TextField fx:id="emailField" promptText="Votre adresse email" styleClass="text-field"/>
+                        </VBox>
+
+                        <!-- Téléphone -->
+                        <VBox spacing="5" styleClass="form-group">
+                            <Label text="Téléphone" styleClass="form-label"/>
+                            <TextField fx:id="phoneField" promptText="Votre numéro de téléphone" styleClass="text-field"/>
+                        </VBox>
+
+                        <!-- Date de naissance -->
+                        <VBox spacing="5" styleClass="form-group">
+                            <Label text="Date de naissance" styleClass="form-label"/>
+                            <DatePicker fx:id="birthDatePicker" promptText="Sélectionnez votre date de naissance" styleClass="text-field"/>
+                        </VBox>
+
+                        <!-- Adresse -->
+                        <VBox spacing="5" styleClass="form-group">
+                            <Label text="Adresse" styleClass="form-label"/>
+                            <TextField fx:id="addressField" promptText="Votre adresse complète" styleClass="text-field"/>
+                        </VBox>
+                    </VBox>
+                </VBox>
+
+                <!-- Boutons d'action -->
+                <VBox spacing="20" alignment="CENTER">
+                    <HBox spacing="20" alignment="CENTER">
+                        <Button fx:id="saveButton" text="Enregistrer les modifications" styleClass="success-button" onAction="#handleSave"/>
+                        <Button fx:id="cancelButton" text="Annuler" styleClass="danger-button" onAction="#handleCancel"/>
+                    </HBox>
+
+                    <HBox spacing="20" alignment="CENTER">
+                        <Button fx:id="changePasswordButton" text="Modifier le mot de passe" styleClass="secondary-button" onAction="#handleChangePassword"/>
+                        <Button fx:id="setup2FAButton" text="Configurer l'authentification à deux facteurs" styleClass="secondary-button" onAction="#handleSetup2FA"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

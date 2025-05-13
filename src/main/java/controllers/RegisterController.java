@@ -1,22 +1,29 @@
 package controllers;
 
 import entities.User;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import services.AuthService;
+import services.RoleService;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ResourceBundle;
 
-public class RegisterController {
+public class RegisterController implements Initializable {
 
     @FXML
     private TextField nomField;
@@ -37,16 +44,34 @@ public class RegisterController {
     private TextField telephoneField;
 
     @FXML
+    private ComboBox<String> roleComboBox;
+
+    @FXML
     private Button registerButton;
 
     @FXML
     private Hyperlink loginLink;
 
     private AuthService authService;
+    private RoleService roleService;
 
     public RegisterController() {
-        // Initialiser le service d'authentification
+        // Initialiser les services
         authService = AuthService.getInstance();
+        roleService = RoleService.getInstance();
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Initialiser la ComboBox avec les rôles disponibles
+        roleComboBox.setItems(FXCollections.observableArrayList(
+                RoleService.ROLE_CLIENT,
+
+                RoleService.ROLE_ORGANISATEUR
+        ));
+
+        // Sélectionner CLIENT par défaut
+        roleComboBox.setValue(RoleService.ROLE_CLIENT);
     }
 
     @FXML
@@ -58,10 +83,11 @@ public class RegisterController {
         String password = passwordField.getText();
         String adresse = adresseField.getText();
         String telephone = telephoneField.getText();
+        String role = roleComboBox.getValue();
 
         // Vérifier que les champs ne sont pas vides
-        if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty() || adresse.isEmpty() || telephone.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Erreur d'inscription", "Veuillez remplir tous les champs.");
+        if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty() || adresse.isEmpty() || telephone.isEmpty() || role == null) {
+            showAlert(Alert.AlertType.ERROR, "Erreur d'inscription", "Veuillez remplir tous les champs et sélectionner un rôle.");
             return;
         }
 
@@ -89,14 +115,31 @@ public class RegisterController {
             user.setVerified(false);
             user.setCreated_at(new Timestamp(System.currentTimeMillis()));
 
+            // Ajouter le rôle sélectionné
+            List<String> roles = new ArrayList<>();
+            roles.add(role);
+            user.setRole(roles);
+
             // Enregistrer l'utilisateur avec le service d'authentification
             authService.register(user);
 
-            // Afficher un message de succès
-            showAlert(Alert.AlertType.INFORMATION, "Inscription réussie", "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.");
+            // Ajouter le rôle à l'utilisateur dans la base de données
+            try {
+                // Récupérer l'ID de l'utilisateur nouvellement créé
+                User createdUser = authService.getUserByEmail(email);
+                if (createdUser != null) {
+                    roleService.addRoleToUser(createdUser.getId(), role);
+                }
+            } catch (SQLException ex) {
+                System.err.println("Erreur lors de l'ajout du rôle: " + ex.getMessage());
+                // Ne pas bloquer l'inscription si l'ajout du rôle échoue
+            }
 
-            // Rediriger vers la page de connexion
-            navigateToLogin();
+            // Afficher un message de succès
+            showAlert(Alert.AlertType.INFORMATION, "Inscription réussie", "Votre compte a été créé avec succès. Vous allez être redirigé vers la configuration de l'authentification à deux facteurs.");
+
+            // Rediriger vers la page de configuration 2FA
+            navigateTo2FASetup(email);
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur d'inscription", "Une erreur est survenue lors de l'inscription: " + e.getMessage());
             e.printStackTrace();
@@ -146,6 +189,34 @@ public class RegisterController {
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.setTitle("Connexion");
+            stage.show();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Fichier FXML non trouvé: " + file.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Navigue vers la page de configuration 2FA
+     * @param email L'email de l'utilisateur
+     * @throws IOException En cas d'erreur lors du chargement de la page
+     */
+    private void navigateTo2FASetup(String email) throws IOException {
+        // Charger la page de configuration 2FA
+        File file = new File("src/main/resources/fxml/2fa.fxml");
+        if (file.exists()) {
+            URL url = file.toURI().toURL();
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            // Récupérer le contrôleur et lui passer l'email
+            controller2fa controller = loader.getController();
+            controller.setEmail(email);
+
+            // Configurer la scène
+            Stage stage = (Stage) registerButton.getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Configuration de l'authentification à deux facteurs");
             stage.show();
         } else {
             showAlert(Alert.AlertType.ERROR, "Erreur de navigation", "Fichier FXML non trouvé: " + file.getAbsolutePath());
