@@ -4,13 +4,13 @@ import entities.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
+
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+
 import javafx.stage.Stage;
-import org.jboss.aerogear.security.otp.Totp;
+
 import services.AuthService;
 import services.RoleService;
 
@@ -83,17 +83,11 @@ public class LoginController {
                     return;
                 }
 
-                // Vérifier si l'utilisateur a activé l'authentification à deux facteurs
-                if (user.getSecretKey() != null && !user.getSecretKey().isEmpty()) {
-                    // Rediriger vers la page de vérification 2FA
-                    showVerification2FADialog(user);
-                } else {
-                    // Connexion réussie sans 2FA
-                    showAlert(Alert.AlertType.INFORMATION, "Connexion réussie", "Bienvenue " + user.getPrenom() + " " + user.getNom() + "!");
+                // Connexion réussie (2FA désactivé)
+                showAlert(Alert.AlertType.INFORMATION, "Connexion réussie", "Bienvenue " + user.getPrenom() + " " + user.getNom() + "!");
 
-                    // Rediriger vers le tableau de bord approprié en fonction du rôle
-                    navigateToDashboard(user);
-                }
+                // Rediriger vers le tableau de bord approprié en fonction du rôle
+                navigateToDashboard(user);
             } else {
                 // Échec de la connexion
                 showAlert(Alert.AlertType.ERROR, "Erreur de connexion", "Email ou mot de passe incorrect.");
@@ -164,16 +158,15 @@ public class LoginController {
         try {
             // Déterminer le type d'utilisateur
             String userType = roleService.getUserType(user);
-            String fxmlPath;
             String title;
 
-
+            // Choisir le tableau de bord approprié
+            String fxmlPath;
             if (userType != null && (userType.equals(RoleService.ROLE_ADMIN) || userType.equals(RoleService.ROLE_SUPER_ADMIN))) {
                 fxmlPath = "/fxml/admin/AdminDashboard.fxml";
                 title = "Panneau d'administration";
             } else {
-                fxmlPath = "src/main/resources/fxml/HomePage.fxml";
-
+                fxmlPath = "/fxml/ClientDashboard.fxml";
                 title = "Tableau de bord client";
             }
 
@@ -209,7 +202,6 @@ public class LoginController {
             e.printStackTrace();
         }
     }
-
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
@@ -217,6 +209,7 @@ public class LoginController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
 
     /**
      * Navigue vers la page de configuration 2FA
@@ -250,93 +243,7 @@ public class LoginController {
         }
     }
 
-    /**
-     * Affiche une boîte de dialogue pour la vérification 2FA
-     * @param user L'utilisateur qui se connecte
-     */
-    private void showVerification2FADialog(User user) {
-        try {
-            // Créer une boîte de dialogue pour la vérification 2FA
-            Dialog<String> dialog = new Dialog<>();
-            dialog.setTitle("Vérification à deux facteurs");
-            dialog.setHeaderText("Veuillez entrer le code généré par votre application d'authentification");
 
-            // Configurer les boutons
-            ButtonType validateButtonType = new ButtonType("Valider", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(validateButtonType, ButtonType.CANCEL);
 
-            // Créer le champ de saisie du code
-            TextField codeField = new TextField();
-            codeField.setPromptText("Code à 6 chiffres");
 
-            // Créer la mise en page
-            GridPane grid = new GridPane();
-            grid.setHgap(10);
-            grid.setVgap(10);
-            grid.setPadding(new Insets(20, 150, 10, 10));
-
-            grid.add(new Label("Code:"), 0, 0);
-            grid.add(codeField, 1, 0);
-
-            dialog.getDialogPane().setContent(grid);
-
-            // Convertir le résultat en code
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == validateButtonType) {
-                    return codeField.getText();
-                }
-                return null;
-            });
-
-            // Attendre la réponse de l'utilisateur
-            Optional<String> result = dialog.showAndWait();
-
-            result.ifPresent(code -> {
-                try {
-                    // Vérifier le code 2FA
-                    if (verify2FACode(user, code)) {
-                        // Code valide, connexion réussie
-                        showAlert(Alert.AlertType.INFORMATION, "Connexion réussie", "Bienvenue " + user.getPrenom() + " " + user.getNom() + "!");
-
-                        // Rediriger vers le tableau de bord approprié
-                        navigateToDashboard(user);
-                    } else {
-                        // Code invalide
-                        showAlert(Alert.AlertType.ERROR, "Erreur de vérification", "Code invalide. Veuillez réessayer.");
-                    }
-                } catch (Exception e) {
-                    showAlert(Alert.AlertType.ERROR, "Erreur", "Une erreur s'est produite lors de la vérification: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            });
-
-        } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Erreur", "Une erreur s'est produite: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Vérifie le code 2FA
-     * @param user L'utilisateur qui se connecte
-     * @param code Le code entré par l'utilisateur
-     * @return true si le code est valide, false sinon
-     */
-    private boolean verify2FACode(User user, String code) {
-        try {
-            // Vérifier que le code n'est pas vide
-            if (code == null || code.trim().isEmpty() || user.getSecretKey() == null) {
-                return false;
-            }
-
-            // Vérifier le code avec la clé secrète de l'utilisateur
-            Totp totp = new Totp(user.getSecretKey());
-            return totp.verify(code);
-
-        } catch (Exception e) {
-            System.err.println("Exception dans verify2FACode: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
 }
