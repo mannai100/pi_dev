@@ -7,12 +7,9 @@ import com.twilio.type.PhoneNumber;
 public class SMSService {
 
 
-
-    // Vos identifiants Twilio
-    private static final String ACCOUNT_SID = "AC964013b28b281d98399d55acc44fc368";
-    private static final String AUTH_TOKEN = "7ce34845284866a3d3117aadaff5f9f0";
-    private static final String FROM_NUMBER = "+19856165928";
-
+    private static final String ACCOUNT_SID = "AC4df3c904f289a91c5135d27ee19de4a4";
+    private static final String AUTH_TOKEN = "cf62f75eba40c470f8ad2f4354955d3e";
+    private static final String FROM_NUMBER = "+19705571479";
     static {
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
     }

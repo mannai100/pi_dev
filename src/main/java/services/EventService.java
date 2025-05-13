@@ -161,9 +161,9 @@ public class EventService {
      */
     private boolean isValidStatus(String status) {
         return status != null && (
-            status.equals(STATUS_PENDING) ||
-            status.equals(STATUS_APPROVED) ||
-            status.equals(STATUS_REJECTED)
+                status.equals(STATUS_PENDING) ||
+                        status.equals(STATUS_APPROVED) ||
+                        status.equals(STATUS_REJECTED)
         );
     }
 
@@ -175,7 +175,7 @@ public class EventService {
     private void sendEventApprovalSMS(String eventTitle, String userName) {
         try {
             // Numéro de téléphone de l'administrateur
-            String adminPhoneNumber = "+21655667940";
+            String adminPhoneNumber = "+21621838849";
 
             // Message à envoyer
             String message = "Un nouvel événement a été approuvé: '" + eventTitle + "' créé par " + userName;
@@ -203,7 +203,7 @@ public class EventService {
             }
 
             // Numéro de téléphone de l'administrateur
-            String adminPhoneNumber = "+21655667940";
+            String adminPhoneNumber = "+21621838849";
 
             // Récupérer les informations de l'événement pour le SMS
             String eventTitle = event.getTitle();
