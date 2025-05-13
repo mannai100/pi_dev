@@ -23,9 +23,7 @@
 
             <!-- Barre de recherche -->
             <HBox styleClass="search-bar" alignment="CENTER_LEFT" spacing="15">
-                <TextField fx:id="searchField" promptText="Rechercher une réservation..." styleClass="search-field" prefWidth="300"/>
-                <Label text="Statut:" styleClass="form-label"/>
-                <ComboBox fx:id="statutFilter" prefWidth="150" styleClass="filter-combo"/>
+                <TextField fx:id="searchField" promptText="Rechercher une réservation..." styleClass="search-field" prefWidth="450"/>
                 <Pane HBox.hgrow="ALWAYS" />
                 <Button text="Rafraîchir" onAction="#handleRefresh" styleClass="button"/>
                 <Button text="Effacer les filtres" onAction="#handleClearFilters" styleClass="button"/>

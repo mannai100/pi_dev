@@ -40,8 +40,7 @@ public class ReservationListController implements Initializable {
     @FXML
     private TextField searchField;
 
-    @FXML
-    private ComboBox<String> statutFilter;
+    // Filtre de statut supprimé
 
     @FXML
     private Text totalReservationsText;
@@ -76,10 +75,7 @@ public class ReservationListController implements Initializable {
             }
         });
 
-        // Initialiser le filtre de statut
-        statutFilter.getItems().addAll("Tous", "en attente", "confirmé", "annulé");
-        statutFilter.setValue("Tous");
-        statutFilter.setOnAction(event -> filterReservations());
+        // Le filtre de statut a été supprimé
 
         // Configurer le champ de recherche
         searchField.textProperty().addListener((observable, oldValue, newValue) -> filterReservations());
@@ -117,12 +113,10 @@ public class ReservationListController implements Initializable {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                 Label dateLabel = new Label("Date de réservation: " + dateFormat.format(reservation.getDateReservation()));
 
-                // Statut
-                Label statutLabel = new Label("Statut: " + reservation.getStatut());
-                statutLabel.setStyle(getStatutStyle(reservation.getStatut()));
+                // Statut supprimé
 
                 // Ajouter les éléments au conteneur
-                vbox.getChildren().addAll(eventLabel, userLabel, dateLabel, statutLabel);
+                vbox.getChildren().addAll(eventLabel, userLabel, dateLabel);
 
                 // Ajouter des boutons d'action en fonction des droits de l'utilisateur
                 try {
@@ -144,17 +138,13 @@ public class ReservationListController implements Initializable {
 
                     // Seuls l'admin et l'organisateur peuvent confirmer ou annuler
                     if (isAdmin || isOrganiser) {
-                        if ("en attente".equals(reservation.getStatut())) {
-                            Button confirmBtn = new Button("Confirmer");
-                            confirmBtn.setOnAction(e -> confirmReservation(reservation));
-                            actionBox.getChildren().add(confirmBtn);
-                        }
+                        Button confirmBtn = new Button("Confirmer");
+                        confirmBtn.setOnAction(e -> confirmReservation(reservation));
+                        actionBox.getChildren().add(confirmBtn);
+                    }
 
-                        Button cancelBtn = new Button("Annuler");
-                        cancelBtn.setOnAction(e -> cancelReservation(reservation));
-                        actionBox.getChildren().add(cancelBtn);
-                    } else if (isOwner && "en attente".equals(reservation.getStatut())) {
-                        // Le propriétaire de la réservation peut l'annuler si elle est en attente
+                    // Bouton d'annulation pour admin, organisateur ou propriétaire
+                    if (isAdmin || isOrganiser || isOwner) {
                         Button cancelBtn = new Button("Annuler");
                         cancelBtn.setOnAction(e -> cancelReservation(reservation));
                         actionBox.getChildren().add(cancelBtn);
@@ -218,7 +208,6 @@ public class ReservationListController implements Initializable {
 
     private void filterReservations() {
         String searchText = searchField.getText().toLowerCase();
-        String statutText = statutFilter.getValue();
 
         try {
             User currentUser = authService.getCurrentUser();
@@ -243,10 +232,7 @@ public class ReservationListController implements Initializable {
                             (reservation.getUser() != null && (reservation.getUser().getNom().toLowerCase().contains(searchText) ||
                                                               reservation.getUser().getPrenom().toLowerCase().contains(searchText)));
 
-                    boolean matchesStatut = "Tous".equals(statutText) ||
-                            (reservation.getStatut() != null && reservation.getStatut().equals(statutText));
-
-                    if (matchesSearch && matchesStatut) {
+                    if (matchesSearch) {
                         reservationList.add(reservation);
                     }
                 }
@@ -345,7 +331,6 @@ public class ReservationListController implements Initializable {
     @FXML
     public void handleClearFilters(ActionEvent event) {
         searchField.clear();
-        statutFilter.setValue("Tous");
         loadReservations();
     }
 

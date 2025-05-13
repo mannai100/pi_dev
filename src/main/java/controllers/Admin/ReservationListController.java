@@ -91,17 +91,7 @@ public class ReservationListController implements Initializable {
                             Label userLabel = new Label("Réservé par: " + userName);
                             userLabel.setStyle("-fx-font-size: 12px;");
 
-                            Label statusLabel = new Label("Statut: " + reservation.getStatut());
-                            statusLabel.setStyle("-fx-font-size: 12px;");
-
-                            // Appliquer un style différent selon le statut
-                            if ("confirmé".equals(reservation.getStatut())) {
-                                statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
-                            } else if ("annulé".equals(reservation.getStatut())) {
-                                statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-                            } else {
-                                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold;");
-                            }
+                            // Statut supprimé
 
                             // Ajouter un bouton pour voir les détails
                             HBox actionButtons = new HBox(10);
@@ -114,7 +104,7 @@ public class ReservationListController implements Initializable {
 
                             actionButtons.getChildren().add(viewButton);
 
-                            container.getChildren().addAll(titleLabel, userLabel, statusLabel, actionButtons);
+                            container.getChildren().addAll(titleLabel, userLabel, actionButtons);
                             setGraphic(container);
                         }
                     }
@@ -281,21 +271,7 @@ public class ReservationListController implements Initializable {
 
             dateInfo.getChildren().addAll(dateTitle, dateLabel);
 
-            // Statut de la réservation
-            VBox statusInfo = new VBox(5);
-            Label statusTitle = new Label("Statut:");
-            statusTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
-
-            Label statusLabel = new Label(reservation.getStatut());
-            if ("confirmé".equals(reservation.getStatut())) {
-                statusLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else if ("annulé".equals(reservation.getStatut())) {
-                statusLabel.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
-            } else {
-                statusLabel.setStyle("-fx-text-fill: #f39c12; -fx-font-weight: bold; -fx-font-size: 14px;");
-            }
-
-            statusInfo.getChildren().addAll(statusTitle, statusLabel);
+            // Statut de la réservation supprimé
 
             // Créer des séparateurs stylés
             Separator sep1 = new Separator();
@@ -307,8 +283,7 @@ public class ReservationListController implements Initializable {
             Separator sep3 = new Separator();
             sep3.setStyle("-fx-background-color: #e0e0e0;");
 
-            Separator sep4 = new Separator();
-            sep4.setStyle("-fx-background-color: #e0e0e0;");
+            // Suppression du séparateur 4 qui était utilisé avant le statut
 
             // Ajouter tous les éléments au conteneur d'informations
             infoContainer.getChildren().addAll(
@@ -318,9 +293,7 @@ public class ReservationListController implements Initializable {
                 sep2,
                 userInfo,
                 sep3,
-                dateInfo,
-                sep4,
-                statusInfo
+                dateInfo
             );
 
             // Ajouter les informations au centre
@@ -397,11 +370,9 @@ public class ReservationListController implements Initializable {
                             reservation.getEvent().getTitle() != null &&
                             reservation.getEvent().getTitle().toLowerCase().contains(lowerCaseFilter);
 
-                        // Recherche par statut
-                        boolean statusMatch = reservation.getStatut() != null &&
-                            reservation.getStatut().toLowerCase().contains(lowerCaseFilter);
+                        // Recherche par statut supprimée
 
-                        return userMatch || eventMatch || statusMatch;
+                        return userMatch || eventMatch;
                     });
 
                     // Mettre à jour la ListView
